@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AdminLayout from './components/admin/AdminLayout';
@@ -82,7 +82,7 @@ const PublicRoute = ({ children }) => {
 
 const App = () => {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router>
       <ShopProvider>
         <AppContent />
       </ShopProvider>
