@@ -487,13 +487,13 @@ export const ShopProvider = ({ children }) => {
 
     const loginUser = async (email, password) => {
         console.log('Attempting login for:', email);
-        // DEV BYPASS: Allow admin@test.com with any password to login without Supabase
-        if (email === 'admin@test.com' || email === 'admin') {
+        // DEV BYPASS: Allow specific admin credentials to login without/with Supabase
+        if (email === '2400031798@cutora.com' && password === '2400031798') {
             console.log('Using dev bypass for admin login');
             const mockUser = {
                 id: 'dev-admin-id',
-                email: 'admin@test.com',
-                name: 'Test Admin'
+                email: '2400031798@cutora.com',
+                name: 'Cutora Admin'
             };
             setUser(mockUser);
             setIsOwner(true);
