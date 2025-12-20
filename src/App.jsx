@@ -82,7 +82,7 @@ const PublicRoute = ({ children }) => {
 
 const App = () => {
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <ShopProvider>
         <AppContent />
       </ShopProvider>
