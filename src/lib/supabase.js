@@ -1,13 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 // If URL is missing, we create a dummy client or handle it gracefully to avoid a white screen crash
 if (!supabaseUrl || !supabaseAnonKey) {
     console.warn("Supabase credentials missing! Using mock client.");
 } else {
-    console.log("Supabase client initialized with URL:", supabaseUrl);
+    console.log("Supabase client initialized.");
+    console.log("URL Length:", supabaseUrl.length);
+    console.log("Anon Key Length:", supabaseAnonKey.length);
+    if (!supabaseUrl.startsWith('https://')) {
+        console.error("Supabase URL must start with https://");
+    }
 }
 
 export const supabase = (supabaseUrl && supabaseAnonKey)
