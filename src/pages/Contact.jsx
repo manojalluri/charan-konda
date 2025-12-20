@@ -1,13 +1,69 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MessageCircle } from 'lucide-react';
+import { Mail, Phone, MessageCircle, Loader, Send, AlertCircle } from 'lucide-react';
 import FadeIn from '../components/FadeIn';
+import emailjs from '@emailjs/browser';
+import { supabase } from '../lib/supabase';
 
 const Contact = () => {
     const [sent, setSent] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        contact: '',
+        requirement: ''
+    });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setSent(true);
+        setLoading(true);
+        setError('');
+
+        try {
+            // 1. Save to Supabase (Record Keeping)
+            const { error: sbError } = await supabase
+                .from('contact_inquiries')
+                .insert([{
+                    name: formData.name,
+                    contact: formData.contact,
+                    requirement: formData.requirement,
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (sbError) console.error('Supabase save error:', sbError);
+
+            // 2. Send via EmailJS (Optional if keys are set)
+            const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_default';
+            const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_contact';
+            const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+            if (publicKey) {
+                await emailjs.send(
+                    serviceId,
+                    templateId,
+                    {
+                        from_name: formData.name,
+                        from_contact: formData.contact,
+                        message: formData.requirement,
+                        to_name: 'Cutora Admin',
+                    },
+                    publicKey
+                );
+            } else {
+                console.warn('EmailJS Public Key not set in environment variables. Data saved to Supabase only.');
+            }
+
+            setSent(true);
+        } catch (err) {
+            console.error('Contact form error:', err);
+            setError('Something went wrong. Please try again or call us.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     return (
@@ -66,10 +122,47 @@ const Contact = () => {
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 <h3 className="text-xl font-bold mb-2 text-[#1C1C1C]">Send a Message</h3>
-                                <input required placeholder="Your Name" className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400" />
-                                <input required placeholder="Phone / Email" className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400" />
-                                <textarea required rows={4} placeholder="Your Requirement" className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400" />
-                                <button type="submit" className="w-full btn-primary py-3.5 shadow-lg shadow-orange-500/20">SEND MESSAGE</button>
+
+                                {error && (
+                                    <div className="bg-red-50 text-red-600 text-sm font-semibold p-4 rounded-xl flex items-center gap-2 border border-red-100">
+                                        <AlertCircle size={18} />
+                                        {error}
+                                    </div>
+                                )}
+
+                                <input
+                                    required
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    placeholder="Your Name"
+                                    className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400"
+                                />
+                                <input
+                                    required
+                                    name="contact"
+                                    value={formData.contact}
+                                    onChange={handleChange}
+                                    placeholder="Phone / Email"
+                                    className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400"
+                                />
+                                <textarea
+                                    required
+                                    name="requirement"
+                                    value={formData.requirement}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    placeholder="Your Requirement"
+                                    className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full btn-primary py-3.5 shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? <Loader className="animate-spin" size={20} /> : <Send size={20} />}
+                                    {loading ? 'SENDING...' : 'SEND MESSAGE'}
+                                </button>
                             </form>
                         )}
                     </FadeIn>
