@@ -19,7 +19,6 @@ const Contact = lazy(() => import('./pages/Contact'));
 const Login = lazy(() => import('./pages/Login'));
 const MyOrders = lazy(() => import('./pages/MyOrders'));
 const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
-const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 
 // Admin pages - with error handling
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -31,7 +30,6 @@ const Inventory = lazy(() => import('./pages/admin/Inventory'));
 const Discounts = lazy(() => import('./pages/admin/Discounts'));
 const Analytics = lazy(() => import('./pages/admin/Analytics'));
 const Settings = lazy(() => import('./pages/admin/Settings'));
-const Tracking = lazy(() => import('./pages/admin/Tracking'));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -112,7 +110,6 @@ const AppContent = () => {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/orders" element={<PublicRoute><MyOrders /></PublicRoute>} />
           <Route path="/order-confirmation/:orderId" element={<PublicRoute><OrderConfirmation /></PublicRoute>} />
-          <Route path="/track-order" element={<PublicRoute><TrackOrder /></PublicRoute>} />
 
           {/* Admin Login - No Layout */}
           <Route
@@ -133,7 +130,6 @@ const AppContent = () => {
           <Route path="/admin/discounts" element={<AdminRoute><Discounts /></AdminRoute>} />
           <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
-          <Route path="/admin/tracking" element={<AdminRoute><Tracking /></AdminRoute>} />
 
           {/* Fallback Routes */}
           <Route path="/admin/*" element={<Navigate to="/admin/dashboard" replace />} />

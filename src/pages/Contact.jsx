@@ -25,11 +25,8 @@ const Contact = () => {
                             <h3 className="text-xl font-bold mb-4 text-[#1C1C1C]">Bulk Orders?</h3>
                             <p className="text-[#60646C] mb-8 leading-relaxed">We supply fresh fish to top hotels and restaurants. Get special rates for bulk quantities.</p>
                             <div className="flex gap-4">
-                                <button className="flex-1 btn-primary flex items-center justify-center gap-2 h-12 shadow-md">
+                                <button className="w-full btn-primary flex items-center justify-center gap-2 h-12 shadow-md">
                                     <Phone size={18} /> CALL SALES
-                                </button>
-                                <button className="flex-1 bg-[#2ECC71] text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-[#27ae60] transition-colors h-12 uppercase tracking-wide text-sm shadow-md">
-                                    <MessageCircle size={18} /> WHATSAPP
                                 </button>
                             </div>
                         </div>

@@ -56,9 +56,6 @@ const Navbar = () => {
                         <NavLink to="/menu">
                             <span className="group-hover:text-[#FC8019] transition-colors">FRESH CUTS</span>
                         </NavLink>
-                        <NavLink to="/track-order">
-                            <span className="group-hover:text-[#FC8019] transition-colors">TRACK ORDER</span>
-                        </NavLink>
                         {user && (
                             <NavLink to="/orders">
                                 <span className="group-hover:text-[#FC8019] transition-colors">MY ORDERS</span>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, MessageCircle, Package, Home, Calendar, MapPin, Clock } from 'lucide-react';
+import { CheckCircle, Package, Home, Calendar, MapPin } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
 
@@ -39,34 +39,6 @@ const OrderConfirmation = () => {
         );
     }
 
-    const sendWhatsAppMessage = () => {
-        if (!order) return;
-
-        const itemsList = order.items.map(item =>
-            `- ${item.name} (${item.cut}) – ${item.quantity}kg`
-        ).join('\n');
-
-        const message = `Hi, I have placed an order on Cutora Fishes.
-
-Order ID: ${order.id}
-Name: ${order.customer.name}
-Phone: ${order.customer.phone}
-Address: ${order.customer.address}, ${order.customer.city} - ${order.customer.pincode}
-
-Items:
-${itemsList}
-
-Item Total: ₹${order.itemTotal}
-Delivery Fee: ₹${order.deliveryFee}
-Taxes & Charges: ₹${order.taxesAndCharges}
-Total Amount: ₹${order.finalAmount}
-Payment: Cash on Delivery
-
-Please confirm. Thank you.`;
-
-        const whatsappLink = `https://wa.me/919876543210?text=${encodeURIComponent(message)}`;
-        window.open(whatsappLink, '_blank');
-    };
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -81,53 +53,6 @@ Please confirm. Thank you.`;
                         Thank you for your purchase. Your order has been placed successfully.
                     </p>
 
-                    {/* Status Tracking Stepper */}
-                    <div className="mt-12 max-w-xl mx-auto px-4">
-                        <div className="relative flex justify-between">
-                            <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full" />
-                            <div
-                                className="absolute top-1/2 left-0 h-1 bg-orange-500 -translate-y-1/2 transition-all duration-1000 rounded-full"
-                                style={{
-                                    width: order.status === 'Confirmed' ? '5%' :
-                                        order.status === 'Packed' ? '33.3%' :
-                                            order.status === 'Shipping' ? '66.6%' :
-                                                order.status === 'Delivered' ? '100%' : '5%' // Default to 5% for Confirmed
-                                }}
-                            />
-
-                            {[
-                                { id: 'Confirmed', label: 'Confirmed', icon: Clock },
-                                { id: 'Packed', label: 'Packed', icon: Package },
-                                { id: 'Shipping', label: 'Shipping', icon: Package },
-                                { id: 'Delivered', label: 'Delivered', icon: CheckCircle }
-                            ].map((step, index) => {
-                                const stages = ['Confirmed', 'Packed', 'Shipping', 'Delivered'];
-                                const currentIdx = stages.indexOf(order.status || 'Confirmed');
-                                const stepIdx = stages.indexOf(step.id);
-                                const isCompleted = stepIdx < currentIdx || order.status === 'Delivered';
-                                const isActive = step.id === (order.status || 'Confirmed');
-                                const StepIcon = step.icon;
-
-                                return (
-                                    <div key={step.id} className="relative z-10 flex flex-col items-center">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${isCompleted || isActive
-                                            ? 'bg-orange-500 border-orange-100 text-white shadow-lg shadow-orange-200'
-                                            : 'bg-white border-gray-100 text-gray-300'
-                                            }`}>
-                                            <StepIcon size={18} />
-                                        </div>
-                                        <span className={`text-[10px] font-black mt-2 uppercase tracking-tighter ${isActive ? 'text-orange-600' : 'text-gray-400'
-                                            }`}>{step.label}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="mt-10 inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-mono font-medium text-gray-700">
-                        <span className="text-gray-400">TRACKING ID:</span>
-                        <span className="text-orange-600 font-bold select-all">{order.id}</span>
-                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -216,20 +141,6 @@ Please confirm. Thank you.`;
                                 We have received your order. We will call you to confirm delivery timing.
                             </p>
 
-                            <button
-                                onClick={sendWhatsAppMessage}
-                                className="w-full mb-3 flex items-center justify-center gap-2 px-6 py-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all font-bold shadow-lg shadow-green-500/30 transform active:scale-95"
-                            >
-                                <MessageCircle size={20} />
-                                Confirm on WhatsApp
-                            </button>
-
-                            <button
-                                onClick={() => navigate('/track-order', { state: { orderId: order.id } })}
-                                className="w-full mb-3 px-6 py-3 bg-white border-2 border-orange-100 text-orange-600 rounded-xl hover:bg-orange-50 hover:border-orange-200 transition-colors font-semibold"
-                            >
-                                Track My Order
-                            </button>
 
                             <button
                                 onClick={() => navigate('/')}
