@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    /* Using specific hex codes to match config exactly without @apply issues */
+    @apply font-sans antialiased;
+    background-color: #F7F7F7;
+    /* brand.light */
+    color: #1C1C1C;
+    /* brand.dark */
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-extrabold tracking-tight;
+    color: #1C1C1C;
+  }
+}
+
+@layer components {
+
+  /* Primary CTA Button - Swiggy Orange */
+  .btn-primary {
+    @apply px-8 py-3.5 bg-[#FC8019] text-white rounded-lg font-bold uppercase tracking-wider text-sm hover:shadow-lg hover:bg-[#e26e0f] active:scale-95 transition-all duration-300;
+  }
+
+  /* Secondary / Outline Button */
+  .btn-secondary {
+    @apply px-8 py-3.5 bg-white text-[#FC8019] border border-[#FC8019] rounded-lg font-bold uppercase tracking-wider text-sm hover:bg-orange-50 active:scale-95 transition-all duration-300;
+  }
+
+  /* Premium Card Style */
+  .card {
+    @apply bg-white rounded-2xl border border-transparent shadow-card transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply hover:-translate-y-1 hover:shadow-float;
+  }
+
+  /* Badge Styles */
+  .badge-fresh {
+    @apply bg-[#2ECC71] text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+  }
+}
