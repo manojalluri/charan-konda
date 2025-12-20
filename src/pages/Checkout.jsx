@@ -35,55 +35,6 @@ const Checkout = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // PayU Config (Replace with your actual keys)
-    // IMPORTANT: In production, the HASH must be generated on a SECURE BACKEND (Node.js/Supabase Edge Function)
-    const PAYU_CONFIG = {
-        key: "JPM7Vq", // Replace with your Merchant Key
-        env: "test", // Change to 'prod' for live
-    };
-
-    const PAYU_URL = PAYU_CONFIG.env === "test"
-        ? "https://test.payu.in/_payment"
-        : "https://secure.payu.in/_payment";
-
-    const handlePayUPayment = (orderId, orderDetails) => {
-        // 1. Prepare data for PayU
-        const pd = {
-            key: PAYU_CONFIG.key,
-            txnid: orderId,
-            amount: orderDetails.finalAmount.toFixed(2),
-            firstname: formData.name,
-            email: user?.email || "customer@example.com",
-            phone: formData.phone,
-            productinfo: "Cutora Fresh - Order " + orderId,
-            surl: `${window.location.origin}/order-confirmation/${orderId}?status=success`,
-            furl: `${window.location.origin}/checkout?status=failed`,
-            service_provider: "payu_paisa"
-        };
-
-        // 2. Generate Hash (MOCK for now - should be done via Backend)
-        // In reality, you'd call your API: const hash = await getHashFromBackend(pd);
-        const hash = "DUMMY_HASH_REPLACE_WITH_BACKEND_GENERATED_HASH";
-
-        // 3. Create a hidden form and submit it to PayU
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = PAYU_URL;
-
-        const data = { ...pd, hash };
-
-        Object.entries(data).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value;
-            form.appendChild(input);
-        });
-
-        document.body.appendChild(form);
-        form.submit();
-    };
-
     // Calculate total with dynamic pricing
     const itemTotal = cart.reduce((sum, item) => {
         const itemPrice = getProductPrice(item.price, item.cut);
@@ -129,15 +80,9 @@ const Checkout = () => {
                 status: 'Confirmed',
                 userId: user?.id,
                 userEmail: user?.email || formData.email,
-                paymentMethod: formData.paymentMethod,
-                paymentStatus: formData.paymentMethod === 'COD' ? 'Pending' : 'Awaiting Payment'
+                paymentMethod: 'COD',
+                paymentStatus: 'Pending'
             };
-
-            // If PayU is selected, we need to handle the redirect
-            if (formData.paymentMethod === 'PayU') {
-                handlePayUPayment(orderId, orderDetails);
-                return;
-            }
 
             // For COD: Place order using Context (saves to DB/Local)
             await placeOrder(orderDetails);
@@ -250,61 +195,16 @@ const Checkout = () => {
                                 </div>
                             </div>
 
-                            {/* Payment Method Selection */}
-                            <div className="space-y-4 pt-4 border-t border-gray-100">
-                                <h3 className="font-bold text-lg flex items-center gap-2 text-[#1C1C1C]">
-                                    💳 Payment Method
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === 'COD' ? 'border-[#FC8019] bg-orange-50' : 'border-gray-200'}`}>
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="radio"
-                                                name="paymentMethod"
-                                                value="COD"
-                                                checked={formData.paymentMethod === 'COD'}
-                                                onChange={handleChange}
-                                                className="w-4 h-4 text-[#FC8019]"
-                                            />
-                                            <span className="font-bold text-gray-800">Cash on Delivery</span>
-                                        </div>
-                                        <span className="text-xl">💵</span>
-                                    </label>
-
-                                    <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === 'PayU' ? 'border-[#FC8019] bg-orange-50' : 'border-gray-200'}`}>
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="radio"
-                                                name="paymentMethod"
-                                                value="PayU"
-                                                checked={formData.paymentMethod === 'PayU'}
-                                                onChange={handleChange}
-                                                className="w-4 h-4 text-[#FC8019]"
-                                            />
-                                            <span className="font-bold text-gray-800">PayU (Online)</span>
-                                        </div>
-                                        <span className="text-xl">💳</span>
-                                    </label>
-                                </div>
-                            </div>
-
                             <div className="pt-6 border-t border-dashed border-gray-200">
                                 <div className="flex justify-between items-center mb-6">
                                     <span className="font-bold text-lg text-[#1C1C1C]">Total Amount</span>
                                     <span className="font-extrabold text-2xl text-[#FC8019]">₹{finalAmount}</span>
                                 </div>
 
-                                {formData.paymentMethod === 'COD' ? (
-                                    <p className="text-sm text-[#60646C] mb-6 bg-orange-50 p-4 rounded-xl border border-orange-100 flex items-start gap-3 font-medium">
-                                        <span className="text-xl">⚠️</span>
-                                        <span>Payment Mode: <strong>Cash on Delivery</strong> or <strong>UPI</strong> upon delivery. <br /> Please keep exact change if possible.</span>
-                                    </p>
-                                ) : (
-                                    <p className="text-sm text-[#60646C] mb-6 bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-3 font-medium">
-                                        <span className="text-xl">🔒</span>
-                                        <span>You will be redirected to <strong>PayU Secure Gateway</strong> to complete your payment safely.</span>
-                                    </p>
-                                )}
+                                <p className="text-sm text-[#60646C] mb-6 bg-orange-50 p-4 rounded-xl border border-orange-100 flex items-start gap-3 font-medium">
+                                    <span className="text-xl">💵</span>
+                                    <span>Payment Mode: <strong>Cash on Delivery</strong> or <strong>UPI</strong> upon delivery. <br /> Please keep exact change if possible.</span>
+                                </p>
 
                                 <button
                                     type="submit"
