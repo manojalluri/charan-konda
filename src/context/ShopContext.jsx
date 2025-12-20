@@ -417,10 +417,13 @@ export const ShopProvider = ({ children }) => {
             }
 
             const userRole = data?.role || 'customer';
-            const ownerStatus = userRole === 'owner';
+            // Match both 'owner' and 'admin' roles for administrative access
+            const isAdminRole = userRole === 'owner' || userRole === 'admin';
 
-            setIsOwner(ownerStatus);
-            setIsAdmin(ownerStatus); // Only owners are admins
+            console.log(`User ${email} has role: ${userRole}. IsAdmin: ${isAdminRole}`);
+
+            setIsOwner(isAdminRole);
+            setIsAdmin(isAdminRole);
 
             return userRole;
         } catch (err) {
@@ -432,6 +435,7 @@ export const ShopProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        console.log('ShopProvider initialized. Supabase client:', supabase.auth.signInWithPassword ? 'Real' : 'Mock');
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
@@ -482,8 +486,10 @@ export const ShopProvider = ({ children }) => {
     }, [isAdmin]);
 
     const loginUser = async (email, password) => {
+        console.log('Attempting login for:', email);
         // DEV BYPASS: Allow admin@test.com with any password to login without Supabase
         if (email === 'admin@test.com' || email === 'admin') {
+            console.log('Using dev bypass for admin login');
             const mockUser = {
                 id: 'dev-admin-id',
                 email: 'admin@test.com',
@@ -496,11 +502,20 @@ export const ShopProvider = ({ children }) => {
             return { success: true };
         }
 
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            return { success: false, message: error.message };
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                console.error('Supabase auth login error:', error);
+                return { success: false, message: error.message };
+            }
+
+            console.log('Supabase auth login successful:', data.user?.id);
+            return { success: true };
+        } catch (err) {
+            console.error('Unexpected error in loginUser:', err);
+            return { success: false, message: err.message || 'An unexpected error occurred during auth' };
         }
-        return { success: true };
     };
 
     const registerUser = async (name, email, password) => {
