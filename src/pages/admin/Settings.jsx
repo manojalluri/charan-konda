@@ -33,7 +33,7 @@ const Settings = () => {
         { id: 4, name: 'Net Banking', enabled: false }
     ]);
 
-    const [adminUsers, setAdminUsers] = useState([
+    const [adminUsers] = useState([
         {
             id: 1,
             name: 'Admin User',
