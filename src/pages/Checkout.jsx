@@ -33,6 +33,13 @@ const Checkout = () => {
         paymentMethod: 'COD' // Default
     });
 
+    // Update name when user data loads
+    useEffect(() => {
+        if (user?.name && !formData.name) {
+            setFormData(prev => ({ ...prev, name: user.name }));
+        }
+    }, [user, formData.name]);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Calculate total with dynamic pricing

@@ -61,6 +61,9 @@ const Navbar = () => {
                                 <span className="group-hover:text-[#FC8019] transition-colors">MY ORDERS</span>
                             </NavLink>
                         )}
+                        <NavLink to="/track-order">
+                            <span className="group-hover:text-[#FC8019] transition-colors">TRACK ORDER</span>
+                        </NavLink>
                         <NavLink to="/contact">
                             <span className="group-hover:text-[#FC8019] transition-colors">CONTACT US</span>
                         </NavLink>
@@ -130,6 +133,7 @@ const Navbar = () => {
                             <NavLink to="/">HOME</NavLink>
                             <NavLink to="/menu">FRESH CUTS</NavLink>
                             {user && <NavLink to="/orders">MY ORDERS</NavLink>}
+                            <NavLink to="/track-order">TRACK ORDER</NavLink>
                             <NavLink to="/contact">CONTACT US</NavLink>
                             <hr className="border-gray-100 my-2" />
                             {user ? (

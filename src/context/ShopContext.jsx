@@ -324,7 +324,8 @@ export const ShopProvider = ({ children }) => {
             getProductPrice,
             updateOrderStatus,
             updateOrderTracking,
-            fetchProducts
+            fetchProducts,
+            fetchAllOrders
         }}>
             {children}
         </ShopContext.Provider>

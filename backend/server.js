@@ -136,6 +136,14 @@ app.put('/api/orders/:id', async (req, res) => {
 });
 
 // --- CONTACT ROUTES ---
+app.get('/api/contact', async (req, res) => {
+    try {
+        const contacts = await Contact.find().sort({ created_at: -1 });
+        res.json(contacts);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 app.post('/api/contact', async (req, res) => {
     try {
         const contact = new Contact(req.body);

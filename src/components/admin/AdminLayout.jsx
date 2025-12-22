@@ -14,7 +14,9 @@ import {
     ChevronDown,
     Menu,
     X,
-    LogOut
+    LogOut,
+    Truck,
+    MessageCircle
 } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
@@ -29,7 +31,9 @@ const AdminLayout = ({ children }) => {
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Products', href: '/admin/products', icon: Package },
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: 'Tracking', href: '/admin/tracking', icon: Truck },
         { name: 'Customers', href: '/admin/customers', icon: Users },
+        { name: 'Contacts', href: '/admin/contacts', icon: MessageCircle },
         { name: 'Inventory', href: '/admin/inventory', icon: Warehouse },
         { name: 'Discounts', href: '/admin/discounts', icon: Tag },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
