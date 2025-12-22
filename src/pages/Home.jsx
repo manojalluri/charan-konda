@@ -6,8 +6,8 @@ import ProductCard from '../components/ProductCard';
 import FadeIn from '../components/FadeIn';
 
 const Home = () => {
-    const { products, siteConfig } = useShop(); // Read siteConfig
-    const featuredProducts = products.filter(p => p.stock).slice(0, 4);
+    const { products, siteConfig } = useShop();
+    const featuredProducts = (products || []).filter(p => p?.stock).slice(0, 4);
 
     const categories = [
         { title: "Sea Fish", img: "/sea_fish.png", link: "/menu?cat=sea" },
@@ -108,11 +108,17 @@ const Home = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {featuredProducts.map((product, idx) => (
-                            <FadeIn key={product.id} delay={idx * 0.1}>
-                                <ProductCard product={product} />
-                            </FadeIn>
-                        ))}
+                        {featuredProducts.length > 0 ? (
+                            featuredProducts.map((product, idx) => (
+                                <FadeIn key={product?._id || product?.id || idx} delay={idx * 0.1}>
+                                    <ProductCard product={product} />
+                                </FadeIn>
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-12">
+                                <p className="text-gray-500 text-lg">Loading products...</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-12 text-center md:hidden">
