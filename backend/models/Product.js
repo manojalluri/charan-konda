@@ -10,6 +10,8 @@ const productSchema = new mongoose.Schema({
     image: { type: String },
     images: [{ type: String }],
     description: { type: String },
+    cuts: { type: [String], default: ["Uncut", "Cut & Cleaned"] },
+    rating: { type: Number, default: 4.5 },
     variants: [{
         name: String,
         price: Number,

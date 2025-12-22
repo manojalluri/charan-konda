@@ -14,6 +14,8 @@ const initialProducts = [
         status: "Active",
         image: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=800",
         description: "Fresh, tender goat meat cut into perfect curry pieces.",
+        cuts: ["Uncut", "Cut & Cleaned"],
+        rating: 4.8,
         quantityConfig: { "250g": true, "500g": true, "1kg": true, "custom": false }
     },
     {
@@ -25,6 +27,8 @@ const initialProducts = [
         status: "Active",
         image: "https://images.unsplash.com/photo-1534604973900-c41ab46d073e?w=800",
         description: "Freshly caught sea bass, rich in Omega-3.",
+        cuts: ["Uncut", "Cut & Cleaned"],
+        rating: 4.9,
         quantityConfig: { "250g": true, "500g": true, "1kg": true, "custom": true, customMin: 500, customMax: 5000, customStep: 500 }
     }
     // Add more if needed

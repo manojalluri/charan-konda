@@ -5,7 +5,10 @@ import { useShop } from '../context/ShopContext';
 
 const ProductCard = ({ product }) => {
     const { addToCart, cart, updateQuantity, removeFromCart } = useShop();
-    const [selectedCut, setSelectedCut] = useState(product.cuts[0]);
+
+    // Provide default cuts if not present in product data
+    const productCuts = product?.cuts || ["Uncut", "Cut & Cleaned"];
+    const [selectedCut, setSelectedCut] = useState(productCuts[0]);
     const [isExpanded, setIsExpanded] = useState(false);
 
     // Find if this specific product and cut is in cart
@@ -84,7 +87,7 @@ const ProductCard = ({ product }) => {
                                 onChange={(e) => setSelectedCut(e.target.value)}
                                 className="w-full text-sm border border-gray-200 rounded-xl py-2.5 px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#FC8019] focus:border-[#FC8019] text-[#1C1C1C] font-bold appearance-none cursor-pointer hover:border-gray-300 transition-colors"
                             >
-                                {product.cuts.map(cut => (
+                                {productCuts.map(cut => (
                                     <option key={cut} value={cut}>{cut}</option>
                                 ))}
                             </select>
