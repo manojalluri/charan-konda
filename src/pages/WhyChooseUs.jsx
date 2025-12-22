@@ -57,13 +57,13 @@ export const WhyChooseUs = () => {
         {
             name: 'Ravi Kumar',
             restaurant: 'Paradise Restaurant',
-            quote: 'GODACUT has been our protein supplier for over a year now. The quality is consistent, and the early morning deliveries never fail.',
+            quote: 'CUTORA has been our protein supplier for over a year now. The quality is consistent, and the early morning deliveries never fail.',
             rating: 5
         },
         {
             name: 'Suresh Reddy',
             restaurant: 'Bawarchi Biryani',
-            quote: 'From chicken to mutton, the quality of GODACUT products is what keeps our customers coming back. Highly recommended!',
+            quote: 'From chicken to mutton, the quality of CUTORA products is what keeps our customers coming back. Highly recommended!',
             rating: 5
         },
         {
@@ -80,7 +80,7 @@ export const WhyChooseUs = () => {
             <section className="section-padding bg-gradient-to-br from-primary-50 to-white">
                 <div className="container-custom text-center">
                     <h1 className="text-5xl font-heading font-bold text-dark mb-4">
-                        Why <span className="gradient-text">Choose GODACUT</span>
+                        Why <span className="gradient-text">Choose CUTORA</span>
                     </h1>
                     <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                         The smart choice for professional kitchens in Hyderabad
@@ -116,7 +116,7 @@ export const WhyChooseUs = () => {
                 <div className="container-custom">
                     <div className="text-center mb-12">
                         <h2 className="text-4xl font-heading font-bold text-dark mb-4">
-                            GODACUT vs <span className="gradient-text">Traditional Suppliers</span>
+                            CUTORA vs <span className="gradient-text">Traditional Suppliers</span>
                         </h2>
                     </div>
 
@@ -126,7 +126,7 @@ export const WhyChooseUs = () => {
                                 <thead>
                                     <tr className="bg-gray-50">
                                         <th className="px-6 py-4 text-left font-semibold text-dark">Feature</th>
-                                        <th className="px-6 py-4 text-center font-semibold text-primary">GODACUT</th>
+                                        <th className="px-6 py-4 text-center font-semibold text-primary">CUTORA</th>
                                         <th className="px-6 py-4 text-center font-semibold text-gray-500">Traditional</th>
                                     </tr>
                                 </thead>
@@ -207,7 +207,7 @@ export const WhyChooseUs = () => {
             <section className="section-padding bg-gradient-to-r from-primary to-primary-600 text-white">
                 <div className="container-custom text-center">
                     <h2 className="text-4xl font-heading font-bold mb-6">
-                        Ready to Experience the GODACUT Difference?
+                        Ready to Experience the CUTORA Difference?
                     </h2>
                     <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
                         Join 45+ restaurants who have made the smart switch to reliable, quality protein supply.

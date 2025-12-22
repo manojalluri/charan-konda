@@ -6,9 +6,9 @@ import { useState } from 'react';
 
 export const AdminSettings = () => {
     const [settings, setSettings] = useState({
-        brandName: 'GODACUT',
+        brandName: 'cutora',
         contactNumber: '+91 98765 43210',
-        email: 'contact@godacut.com',
+        email: 'contact@cutora.com',
         address: 'Hyderabad, Telangana, India - 500001',
         fssaiNumber: '12345678901234',
         deliveryStartTime: '04:00',

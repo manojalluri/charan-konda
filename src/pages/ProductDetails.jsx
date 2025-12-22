@@ -8,9 +8,15 @@ const ProductDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { products, addToCart, storeSettings, getProductPrice } = useShop();
-    const product = products.find(p => String(p.id) === String(id));
 
-    const [selectedCut, setSelectedCut] = useState(product ? product.cuts[0] : '');
+    // Support both MongoDB _id and legacy id
+    const product = products.find(p =>
+        String(p._id) === String(id) || String(p.id) === String(id)
+    );
+
+    // Provide default cuts if not present
+    const productCuts = product?.cuts || ["Uncut", "Cut & Cleaned"];
+    const [selectedCut, setSelectedCut] = useState(product ? productCuts[0] : '');
     const [quantityType, setQuantityType] = useState('1kg'); // '250g', '500g', '1kg', 'custom'
     const [customWeight, setCustomWeight] = useState(250);
     const [quantity, setQuantity] = useState(1); // Number of units (e.g., 2 units of 250g)
@@ -149,7 +155,7 @@ const ProductDetails = () => {
                         <div className="space-y-4">
                             <label className="text-xs font-extrabold text-[#93959F] uppercase tracking-widest">PREPARATION TYPE</label>
                             <div className="grid grid-cols-2 gap-4">
-                                {product.cuts.map(cut => {
+                                {productCuts.map(cut => {
                                     const cutPrice = getProductPrice(product.price, cut);
                                     const isSelected = selectedCut === cut;
 

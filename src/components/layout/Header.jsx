@@ -27,7 +27,7 @@ export const Header = () => {
                             <span className="text-white font-bold text-xl">G</span>
                         </div>
                         <div>
-                            <h1 className="text-2xl font-heading font-bold text-dark">GODACUT</h1>
+                            <h1 className="text-2xl font-heading font-bold text-dark">CUTORA</h1>
                             <p className="text-xs text-gray-500">Premium B2B Supply</p>
                         </div>
                     </Link>

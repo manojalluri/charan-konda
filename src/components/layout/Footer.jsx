@@ -12,7 +12,7 @@ export const Footer = () => {
                             <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-600 rounded-lg flex items-center justify-center">
                                 <span className="text-white font-bold text-lg">G</span>
                             </div>
-                            <h3 className="text-xl font-heading font-bold">GODACUT</h3>
+                            <h3 className="text-xl font-heading font-bold">CUTORA</h3>
                         </div>
                         <p className="text-gray-400 mb-4">
                             Premium B2B raw & uncooked non-veg supply for restaurants and commercial kitchens in Hyderabad.
@@ -65,9 +65,9 @@ export const Footer = () => {
                                 <Phone size={20} className="mt-1 flex-shrink-0" />
                                 <span>+91 98765 43210</span>
                             </a>
-                            <a href="mailto:contact@godacut.com" className="flex items-start gap-3 text-gray-400 hover:text-primary transition-colors">
+                            <a href="mailto:contact@CUTORA.com" className="flex items-start gap-3 text-gray-400 hover:text-primary transition-colors">
                                 <Mail size={20} className="mt-1 flex-shrink-0" />
-                                <span>contact@godacut.com</span>
+                                <span>contact@CUTORA.com</span>
                             </a>
                             <div className="flex items-start gap-3 text-gray-400">
                                 <MapPin size={20} className="mt-1 flex-shrink-0" />
@@ -80,7 +80,7 @@ export const Footer = () => {
                 {/* Bottom Bar */}
                 <div className="border-t border-dark-600 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-gray-400 text-sm">
-                        © 2025 GODACUT. All rights reserved.
+                        © 2025 CUTORA. All rights reserved.
                     </p>
                     <div className="flex gap-6 text-sm">
                         <Link to="/privacy" className="text-gray-400 hover:text-primary transition-colors">Privacy Policy</Link>

@@ -31,7 +31,7 @@ export const About = () => {
             <section className="section-padding bg-gradient-to-br from-primary-50 to-white">
                 <div className="container-custom text-center">
                     <h1 className="text-5xl font-heading font-bold text-dark mb-4">
-                        About <span className="gradient-text">GODACUT</span>
+                        About <span className="gradient-text">CUTORA</span>
                     </h1>
                     <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                         Your trusted B2B partner for premium raw & uncooked non-veg supplies in Hyderabad
@@ -49,7 +49,7 @@ export const About = () => {
                             </h2>
                             <div className="space-y-4 text-lg text-gray-600">
                                 <p>
-                                    <strong className="text-dark">GODACUT</strong> was born from a simple observation:
+                                    <strong className="text-dark">CUTORA</strong> was born from a simple observation:
                                     restaurants in Hyderabad struggled to find reliable, high-quality bulk protein supplies
                                     that arrived fresh every morning.
                                 </p>

@@ -131,7 +131,7 @@ export const HowItWorks = () => {
                             Daily <span className="gradient-text">Operations Timeline</span>
                         </h2>
                         <p className="text-xl text-gray-600">
-                            A typical day in GODACUT operations
+                            A typical day in CUTORA operations
                         </p>
                     </div>
 

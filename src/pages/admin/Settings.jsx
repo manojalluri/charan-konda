@@ -6,8 +6,8 @@ const Settings = () => {
     const { siteConfig, updateSiteConfig } = useShop();
     const [activeTab, setActiveTab] = useState('store');
     const [storeSettings, setStoreSettings] = useState({
-        name: 'GODACUT',
-        email: 'contact@godacut.com',
+        name: 'CUTORA',
+        email: 'contact@CUTORA.com',
         phone: '+91 98765 43210',
         address: '123 Business Park, HSR Layout, Bangalore, Karnataka - 560102',
         deliveryCharge: 50,
@@ -37,7 +37,7 @@ const Settings = () => {
         {
             id: 1,
             name: 'Admin User',
-            email: 'admin@godacut.com',
+            email: 'admin@CUTORA.com',
             role: 'Super Admin',
             status: 'Active',
             lastLogin: '2024-12-17 10:30 AM'
@@ -45,7 +45,7 @@ const Settings = () => {
         {
             id: 2,
             name: 'Manager User',
-            email: 'manager@godacut.com',
+            email: 'manager@CUTORA.com',
             role: 'Manager',
             status: 'Active',
             lastLogin: '2024-12-17 09:15 AM'
@@ -53,7 +53,7 @@ const Settings = () => {
         {
             id: 3,
             name: 'Staff User',
-            email: 'staff@godacut.com',
+            email: 'staff@CUTORA.com',
             role: 'Staff',
             status: 'Active',
             lastLogin: '2024-12-16 06:45 PM'

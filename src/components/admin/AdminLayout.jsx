@@ -53,7 +53,7 @@ const AdminLayout = ({ children }) => {
                         <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-lg">G</span>
                         </div>
-                        <span className="text-xl font-bold text-gray-900">GODACUT</span>
+                        <span className="text-xl font-bold text-gray-900">CUTORA</span>
                     </Link>
                     <button
                         onClick={() => setSidebarOpen(false)}
