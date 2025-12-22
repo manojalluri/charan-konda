@@ -188,7 +188,7 @@ const Products = () => {
     };
 
     const handleEditClick = (product) => {
-        setEditingProductId(product.id);
+        setEditingProductId(product._id || product.id);
         setIsEditing(true);
         setNewProduct({
             name: product.name,
@@ -309,13 +309,13 @@ const Products = () => {
                             {products.filter(p => (filterCategory === 'All' || p.category === filterCategory) && (filterStatus === 'All' || p.status === filterStatus) && p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((product) => {
                                 const stockStatus = getStockStatus(product.stock_quantity || (product.stock ? 50 : 0));
                                 return (
-                                    <tr key={product.id} className="hover:bg-gray-50">
+                                    <tr key={product._id || product.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <img src={product.image || product.images?.[0] || 'https://via.placeholder.com/100'} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
                                                 <div className="ml-4">
                                                     <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                                                    <div className="text-xs text-gray-500">#{product.id}</div>
+                                                    <div className="text-xs text-gray-500">#{product._id || product.id}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -333,7 +333,7 @@ const Products = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                             <div className="flex items-center justify-end space-x-2">
-                                                <a href={`/product/${product.id}`} target="_blank" rel="noreferrer" className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="View in Store">
+                                                <a href={`/product/${product._id || product.id}`} target="_blank" rel="noreferrer" className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="View in Store">
                                                     <Eye className="w-4 h-4" />
                                                 </a>
                                                 <button
@@ -343,7 +343,7 @@ const Products = () => {
                                                     <Edit className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeleteProduct(product.id)}
+                                                    onClick={() => handleDeleteProduct(product._id || product.id)}
                                                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -359,7 +359,7 @@ const Products = () => {
                     {/* Mobile View Cards */}
                     <div className="md:hidden divide-y divide-gray-200">
                         {products.filter(p => (filterCategory === 'All' || p.category === filterCategory) && (filterStatus === 'All' || p.status === filterStatus) && p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((product) => (
-                            <div key={product.id} className="p-4 bg-white hover:bg-gray-50">
+                            <div key={product._id || product.id} className="p-4 bg-white hover:bg-gray-50">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center">
                                         <img src={product.image || product.images?.[0] || 'https://via.placeholder.com/100'} alt={product.name} className="w-12 h-12 rounded-lg object-cover mr-3" />
@@ -373,7 +373,7 @@ const Products = () => {
                                     </span>
                                 </div>
                                 <div className="flex justify-end space-x-3">
-                                    <a href={`/product/${product.id}`} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold uppercase tracking-wider">
+                                    <a href={`/product/${product._id || product.id}`} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold uppercase tracking-wider">
                                         View Store
                                     </a>
                                     <button
@@ -383,7 +383,7 @@ const Products = () => {
                                         Edit
                                     </button>
                                     <button
-                                        onClick={() => handleDeleteProduct(product.id)}
+                                        onClick={() => handleDeleteProduct(product._id || product.id)}
                                         className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase tracking-wider"
                                     >
                                         Delete

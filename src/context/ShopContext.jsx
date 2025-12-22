@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { products as initialProducts } from '../data/mockData';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 const ShopContext = createContext();
 
@@ -13,6 +13,9 @@ export const ShopProvider = ({ children }) => {
     const [orders, setOrders] = useState([]);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isProductsLoading, setIsProductsLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [isOwner, setIsOwner] = useState(false);
+    const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
     // Default Config
     const defaultConfig = {
@@ -25,80 +28,106 @@ export const ShopProvider = ({ children }) => {
 
     const [siteConfig, setSiteConfig] = useState(defaultConfig);
 
-    // Store Settings (Cutting & Cleaning Charges from Admin)
+    // Store Settings
     const defaultStoreSettings = {
-        cleaningCharge: 10,      // ₹10 per kg
+        cleaningCharge: 10,
         cleaningEnabled: true,
-        cuttingCharge: 15,       // ₹15 per kg
+        cuttingCharge: 15,
         cuttingEnabled: true
     };
 
     const [storeSettings, setStoreSettings] = useState(defaultStoreSettings);
 
-    // --- PERSISTENCE ---
-    // Load initial state
+    // --- INITIALIZATION ---
     useEffect(() => {
-        try {
-            const savedCart = localStorage.getItem('cutora-cart');
-            if (savedCart) setCart(JSON.parse(savedCart) || []);
+        const init = async () => {
+            try {
+                // Load local data
+                const savedCart = localStorage.getItem('cutora-cart');
+                if (savedCart) setCart(JSON.parse(savedCart));
 
-            // Initial products from mock data, but we'll fetch from Supabase later
-            const savedProducts = localStorage.getItem('cutora-products');
-            if (savedProducts) setProducts(JSON.parse(savedProducts) || initialProducts);
-
-            const savedConfig = localStorage.getItem('cutora-config');
-            if (savedConfig) {
-                const parsed = JSON.parse(savedConfig);
-                if (parsed && typeof parsed === 'object') {
-                    setSiteConfig({ ...defaultConfig, ...parsed });
+                const savedAuth = localStorage.getItem('cutora-user');
+                if (savedAuth) {
+                    const parsed = JSON.parse(savedAuth);
+                    setUser(parsed);
+                    setIsAdmin(parsed.role === 'admin' || parsed.role === 'owner');
+                    setIsOwner(parsed.role === 'owner');
                 }
+
+                // Fetch data from MongoDB
+                await fetchAllData();
+            } catch (err) {
+                console.error("Initialization error:", err);
+            } finally {
+                setIsLoadingAuth(false);
             }
-
-            const savedOrders = localStorage.getItem('cutora-orders');
-            if (savedOrders) setOrders(JSON.parse(savedOrders) || []);
-
-            const savedAdmin = localStorage.getItem('cutora-admin');
-            if (savedAdmin) setIsAdmin(JSON.parse(savedAdmin) === true);
-
-            // Fetch real data from Supabase
-            fetchAllData();
-
-        } catch (error) {
-            console.error("Error loading local data:", error);
-        }
+        };
+        init();
     }, []);
 
-    // Save changes
+    // --- PERSISTENCE ---
     useEffect(() => {
-        try {
-            localStorage.setItem('cutora-cart', JSON.stringify(cart));
-        } catch (e) { }
+        localStorage.setItem('cutora-cart', JSON.stringify(cart));
     }, [cart]);
 
-    useEffect(() => {
-        try {
-            localStorage.setItem('cutora-products', JSON.stringify(products));
-        } catch (e) { console.error("Quota exceeded for products", e); }
-    }, [products]);
-
-    useEffect(() => {
-        try {
-            localStorage.setItem('cutora-config', JSON.stringify(siteConfig));
-        } catch (e) { console.error("Quota exceeded for config", e); }
-    }, [siteConfig]);
-
-    useEffect(() => {
-        try {
-            localStorage.setItem('cutora-orders', JSON.stringify(orders));
-        } catch (e) { }
-    }, [orders]);
-
-    useEffect(() => {
-        localStorage.setItem('cutora-admin', JSON.stringify(isAdmin));
-    }, [isAdmin]);
-
-
     // --- ACTIONS ---
+    const fetchProducts = async () => {
+        setIsProductsLoading(true);
+        try {
+            const data = await api.get('/products');
+            if (data && data.length > 0) {
+                setProducts(data);
+            }
+        } catch (err) {
+            console.error('Error fetching products:', err);
+        } finally {
+            setIsProductsLoading(false);
+        }
+    };
+
+    const fetchSettings = async () => {
+        try {
+            const data = await api.get('/settings/site_config');
+            if (data && data.value) {
+                setSiteConfig(prev => ({ ...prev, ...data.value }));
+            }
+        } catch (err) {
+            console.error('Error fetching settings:', err);
+        }
+    };
+
+    const fetchAllOrders = async () => {
+        try {
+            const data = await api.get('/orders');
+            setOrders(data);
+        } catch (err) {
+            console.error('Error fetching all orders:', err);
+        }
+    };
+
+    const loadUserOrders = async (email, userId) => {
+        try {
+            const data = await api.get(`/orders?email=${email}&userId=${userId}`);
+            setOrders(data);
+        } catch (err) {
+            console.error('Error loading user orders:', err);
+        }
+    };
+
+    const fetchAllData = async () => {
+        await Promise.all([
+            fetchProducts(),
+            fetchSettings()
+        ]);
+
+        if (user) {
+            if (user.role === 'admin' || user.role === 'owner') {
+                fetchAllOrders();
+            } else {
+                loadUserOrders(user.email, user.id || user._id);
+            }
+        }
+    };
 
     const addToCart = (product, quantity, cut) => {
         setCart(prev => {
@@ -131,501 +160,141 @@ export const ShopProvider = ({ children }) => {
     const clearCart = () => setCart([]);
 
     const placeOrder = async (orderData) => {
-        // orderData contains complete order details from checkout
-        // including: id, customer, items, itemTotal, deliveryFee, taxesAndCharges, finalAmount, date, status, userId, userEmail
-
         try {
-            // Save to Supabase if user is authenticated
-            if (user) {
-                const { data, error } = await supabase
-                    .from('orders')
-                    .insert([{
-                        id: orderData.id,
-                        user_id: orderData.userId,
-                        user_email: orderData.userEmail,
-                        date: orderData.date,
-                        status: orderData.status,
-                        items: orderData.items,
-                        customer: orderData.customer,
-                        item_total: orderData.itemTotal,
-                        delivery_fee: orderData.deliveryFee,
-                        taxes_and_charges: orderData.taxesAndCharges,
-                        final_amount: orderData.finalAmount
-                    }]);
-
-                if (error) {
-                    console.error('Error saving order to Supabase:', error);
-                    // Continue anyway - we'll still save locally
-                }
-            }
+            const formattedOrder = {
+                ...orderData,
+                user_id: user?.id || user?._id || 'guest',
+                user_email: user?.email || orderData.customer.email
+            };
+            const data = await api.post('/orders', formattedOrder);
+            setOrders(prev => [data, ...prev]);
+            clearCart();
+            return data.id;
         } catch (err) {
-            console.error('Error in placeOrder:', err);
+            console.error('Error placing order:', err);
+            throw err;
         }
-
-        // Always save to local storage as backup
-        setOrders(prev => [orderData, ...prev]);
-        clearCart();
-        return orderData.id;
     };
 
     const addProduct = async (productData) => {
         try {
-            const newProduct = {
-                ...productData,
-                created_at: new Date().toISOString()
-            };
-
-            const { data, error } = await supabase
-                .from('products')
-                .insert([newProduct])
-                .select();
-
-            if (error) throw error;
-
-            if (data && data[0]) {
-                setProducts(prev => [data[0], ...prev]);
-                return { success: true, data: data[0] };
-            }
+            const data = await api.post('/products', productData);
+            setProducts(prev => [data, ...prev]);
+            return { success: true, data };
         } catch (err) {
-            console.error('Error adding product to Supabase:', err);
-            // Fallback for demo if table doesn't exist
-            const fallbackProduct = { ...productData, id: Date.now() };
-            setProducts(prev => [fallbackProduct, ...prev]);
-            return { success: true, data: fallbackProduct };
+            console.error('Error adding product:', err);
+            return { success: false };
         }
     };
 
     const updateProduct = async (id, updatedData) => {
         try {
-            const { data, error } = await supabase
-                .from('products')
-                .update(updatedData)
-                .eq('id', id)
-                .select();
-
-            if (error) throw error;
-
-            if (data && data[0]) {
-                setProducts(prev => prev.map(p => p.id === id ? data[0] : p));
-                return { success: true };
-            }
-        } catch (err) {
-            console.error('Error updating product in Supabase:', err);
-            setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedData } : p));
+            const data = await api.put(`/products/${id}`, updatedData);
+            setProducts(prev => prev.map(p => (p._id === id || p.id === id) ? data : p));
             return { success: true };
+        } catch (err) {
+            console.error('Error updating product:', err);
+            return { success: false };
         }
     };
 
     const deleteProduct = async (id) => {
         try {
-            // Attempt to delete from Supabase
-            const { error } = await supabase
-                .from('products')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
-
-            setProducts(prev => prev.filter(p => p.id !== id));
+            await api.delete(`/products/${id}`);
+            setProducts(prev => prev.filter(p => p._id !== id && p.id !== id));
             return { success: true };
         } catch (err) {
-            console.error('Error deleting product from Supabase:', err);
-
-            // FALLBACK: If Supabase fails (e.g. table doesn't exist yet), 
-            // still delete from local state for better DX during development
-            setProducts(prev => prev.filter(p => p.id !== id));
-
-            // If it's a mock numeric ID, we consider it a success locally
-            if (typeof id === 'number') {
-                return { success: true };
-            }
-
-            return { success: true, message: "Deleted locally, but Supabase sync failed." };
+            console.error('Error deleting product:', err);
+            return { success: false };
         }
     };
 
-    const fetchProducts = async () => {
-        setIsProductsLoading(true);
+    const updateOrderStatus = async (orderId, newStatus) => {
         try {
-            const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                .order('name');
-
-            if (error) throw error;
-
-            if (data && data.length > 0) {
-                setProducts(data);
-            }
+            const data = await api.put(`/orders/${orderId}`, { status: newStatus });
+            setOrders(prev => prev.map(order => order.id === orderId ? { ...order, status: data.status } : order));
+            return { success: true };
         } catch (err) {
-            console.error('Error fetching products from Supabase:', err);
-            // Keep using initialProducts or local products
-        } finally {
-            setIsProductsLoading(false);
+            console.error('Error updating order status:', err);
+            return { success: false };
+        }
+    };
+
+    const updateOrderTracking = async (orderId, trackingData) => {
+        try {
+            const data = await api.put(`/orders/${orderId}`, {
+                tracking_id: trackingData.trackingId,
+                courier_partner: trackingData.courierPartner
+            });
+            setOrders(prev => prev.map(order => order.id === orderId ? { ...order, ...data } : order));
+            return { success: true };
+        } catch (err) {
+            console.error('Error updating tracking:', err);
+            return { success: false };
         }
     };
 
     const updateSiteConfig = async (newConfig) => {
         try {
             const updatedConfig = { ...siteConfig, ...newConfig };
-            setSiteConfig(updatedConfig);
-
-            const { error } = await supabase
-                .from('settings')
-                .upsert({ id: 'site_config', value: updatedConfig });
-
-            if (error) throw error;
+            const data = await api.post('/settings', { id: 'site_config', value: updatedConfig });
+            setSiteConfig(data.value);
         } catch (err) {
-            console.error('Error updating site config in Supabase:', err);
+            console.error('Error updating site config:', err);
         }
     };
-
-    const fetchSettings = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('settings')
-                .select('*')
-                .eq('id', 'site_config')
-                .single();
-
-            if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned"
-
-            if (data && data.value) {
-                setSiteConfig(prev => ({ ...prev, ...data.value }));
-            }
-        } catch (err) {
-            console.error('Error fetching settings from Supabase:', err);
-        }
-    };
-
-    const loginAdmin = () => setIsAdmin(true);
-    const logoutAdmin = () => setIsAdmin(false);
-
-    // --- SUPABASE USER AUTH WITH ROLE MANAGEMENT ---
-    const [user, setUser] = useState(null);
-    const [isOwner, setIsOwner] = useState(false);
-    const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-
-    // Load user orders from Supabase
-    // Load user orders from Supabase
-    const loadUserOrders = async (userId, userEmail) => {
-        try {
-            const { data, error } = await supabase
-                .from('orders')
-                .select('*')
-                .or(`user_id.eq.${userId},user_email.eq.${userEmail}`)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading orders from Supabase:', error);
-                return;
-            }
-
-            if (data) {
-                mergeOrders(data);
-            }
-        } catch (err) {
-            console.error('Error in loadUserOrders:', err);
-        }
-    };
-
-    // Load ALL orders for Admin from Supabase
-    const fetchAllOrders = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('orders')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading all orders:', error);
-                return;
-            }
-
-            if (data) {
-                mergeOrders(data);
-            }
-        } catch (err) {
-            console.error('Error in fetchAllOrders:', err);
-        }
-    };
-
-    // Helper to merge Supabase orders with Local State
-    const mergeOrders = (supabaseOrders) => {
-        // Convert Supabase format to app format
-        const formattedOrders = supabaseOrders.map(order => ({
-            id: order.id,
-            userId: order.user_id,
-            userEmail: order.user_email,
-            date: order.date,
-            status: order.status,
-            items: order.items,
-            customer: order.customer,
-            itemTotal: order.item_total,
-            deliveryFee: order.delivery_fee,
-            taxesAndCharges: order.taxes_and_charges,
-            finalAmount: order.final_amount,
-            trackingId: order.tracking_id,
-            courierPartner: order.courier_partner
-        }));
-
-        setOrders(prev => {
-            const existingIds = new Set(prev.map(o => o.id));
-            const newOrders = formattedOrders.filter(o => !existingIds.has(o.id));
-            // Also update existing orders if status changed (simple merge: prefer Supabase)
-            const updatedPrev = prev.map(localOrder => {
-                const supOrder = formattedOrders.find(s => s.id === localOrder.id);
-                return supOrder ? supOrder : localOrder;
-            });
-
-            // Combine and sort
-            return [...updatedPrev, ...newOrders].sort((a, b) =>
-                new Date(b.date) - new Date(a.date)
-            );
-        });
-    };
-
-    const fetchAllData = async () => {
-        await Promise.all([
-            fetchProducts(),
-            fetchSettings(),
-            isAdmin ? fetchAllOrders() : Promise.resolve()
-        ]);
-    };
-
-    // Check if user has owner role
-    const checkUserRole = async (userId, email) => {
-        // BACKDOOR for testing/demo: Always allow admin@test.com as owner
-        if (email === 'admin@test.com') {
-            setIsOwner(true);
-            setIsAdmin(true);
-            return 'owner';
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', userId)
-                .single();
-
-            if (error) {
-                console.error('Error checking user role:', error);
-                setIsOwner(false);
-                setIsAdmin(false);
-                return 'customer';
-            }
-
-            const userRole = data?.role || 'customer';
-            // Match both 'owner' and 'admin' roles for administrative access
-            const isAdminRole = userRole === 'owner' || userRole === 'admin';
-
-            console.log(`User ${email} has role: ${userRole}. IsAdmin: ${isAdminRole}`);
-
-            setIsOwner(isAdminRole);
-            setIsAdmin(isAdminRole);
-
-            return userRole;
-        } catch (err) {
-            console.error('Error in checkUserRole:', err);
-            setIsOwner(false);
-            setIsAdmin(false);
-            return 'customer';
-        }
-    };
-
-    useEffect(() => {
-        console.log('ShopProvider initialized. Supabase client:', supabase.auth.signInWithPassword ? 'Real' : 'Mock');
-        // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-                setUser({
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: session.user.user_metadata?.name || session.user.email.split('@')[0]
-                });
-                // Check role and load orders
-                checkUserRole(session.user.id, session.user.email).then(role => {
-                    if (role) {
-                        loadUserOrders(session.user.id, session.user.email);
-                    }
-                });
-            }
-            setIsLoadingAuth(false);
-        });
-
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (session?.user) {
-                setUser({
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: session.user.user_metadata?.name || session.user.email.split('@')[0]
-                });
-                // Check role and load orders
-                checkUserRole(session.user.id, session.user.email).then(role => {
-                    if (role) {
-                        loadUserOrders(session.user.id, session.user.email);
-                    }
-                });
-            } else {
-                setUser(null);
-                setIsOwner(false);
-                setIsAdmin(false);
-            }
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    // Sync orders for Admin
-    useEffect(() => {
-        if (isAdmin) {
-            fetchAllOrders();
-        }
-    }, [isAdmin]);
 
     const loginUser = async (email, password) => {
-        // SECURE BYPASS: Check against environment variables
-        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
-
-        if (adminEmail && adminPassword && email === adminEmail && password === adminPassword) {
-            console.log('Secure admin bypass matched');
-            const mockUser = {
-                id: 'admin-bypass',
-                email: adminEmail,
-                name: 'Cutora Admin'
-            };
-            setUser(mockUser);
-            setIsOwner(true);
-            setIsAdmin(true);
-
-            return { success: true };
-        }
-
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const data = await api.post('/auth/login', { email, password });
+            localStorage.setItem('cutora-auth-token', data.token);
+            localStorage.setItem('cutora-user', JSON.stringify(data.user));
+            setUser(data.user);
+            setIsAdmin(data.user.role === 'admin' || data.user.role === 'owner');
+            setIsOwner(data.user.role === 'owner');
 
-            if (error) {
-                console.error('Supabase auth login error:', error);
-                return { success: false, message: error.message };
+            // Reload orders
+            if (data.user.role === 'admin' || data.user.role === 'owner') {
+                fetchAllOrders();
+            } else {
+                loadUserOrders(data.user.email, data.user.id || data.user._id);
             }
 
-            console.log('Supabase auth login successful:', data.user?.id);
             return { success: true };
         } catch (err) {
-            console.error('Unexpected error in loginUser:', err);
-            return { success: false, message: err.message || 'An unexpected error occurred during auth' };
+            console.error('Login error:', err);
+            return { success: false, message: 'Invalid credentials' };
         }
     };
 
     const registerUser = async (name, email, password) => {
-        // 1. Sign Up in Supabase Auth
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { name: name }
-            }
-        });
-
-        if (error) {
-            return { success: false, message: error.message };
+        try {
+            const data = await api.post('/auth/register', { name, email, password });
+            localStorage.setItem('cutora-auth-token', data.token);
+            localStorage.setItem('cutora-user', JSON.stringify(data.user));
+            setUser(data.user);
+            return { success: true };
+        } catch (err) {
+            console.error('Registration error:', err);
+            return { success: false, message: 'Registration failed' };
         }
-
-        // 2. Profile creation is now handled by a Database Trigger on auth.users
-        // This ensures the profile is created even if email verification is pending.
-
-        // Check if email confirmation is required (session might be null even if no error)
-        if (data.user && !data.session) {
-            return { success: true, message: "Account created! Please check your email to confirm." };
-        }
-
-        return { success: true };
     };
 
-    const logoutUser = async () => {
-        await supabase.auth.signOut();
-        // Clear manual state if any
+    const logoutUser = () => {
+        localStorage.removeItem('cutora-auth-token');
+        localStorage.removeItem('cutora-user');
         setUser(null);
-        setIsOwner(false);
         setIsAdmin(false);
-
-        // Clear session-based checkout data (cart)
+        setIsOwner(false);
         clearCart();
-        // Do NOT clear order history - it's persisted across sessions
     };
 
-    // Helper function to get product price based on preparation type
     const getProductPrice = (basePrice, preparationType) => {
-        if (preparationType === 'Uncut') {
-            return basePrice;
-        }
-        // Cut & Clean includes cutting and cleaning charges
+        if (preparationType === 'Uncut') return basePrice;
         let totalCharge = basePrice;
-        if (storeSettings.cuttingEnabled) {
-            totalCharge += storeSettings.cuttingCharge;
-        }
-        if (storeSettings.cleaningEnabled) {
-            totalCharge += storeSettings.cleaningCharge;
-        }
+        if (storeSettings.cuttingEnabled) totalCharge += storeSettings.cuttingCharge;
+        if (storeSettings.cleaningEnabled) totalCharge += storeSettings.cleaningCharge;
         return totalCharge;
-    };
-
-    // Update order status (Admin feature)
-    const updateOrderStatus = async (orderId, newStatus) => {
-        try {
-            // Update in Supabase if user is authenticated
-            if (user) {
-                const { error } = await supabase
-                    .from('orders')
-                    .update({ status: newStatus, updated_at: new Date().toISOString() })
-                    .eq('id', orderId);
-
-                if (error) {
-                    console.error('Error updating order status in Supabase:', error);
-                    // Continue anyway - we'll still update locally
-                }
-            }
-        } catch (err) {
-            console.error('Error in updateOrderStatus:', err);
-        }
-
-        // Always update local storage
-        setOrders(prev => prev.map(order =>
-            order.id === orderId ? { ...order, status: newStatus } : order
-        ));
-    };
-
-    // Update order tracking info (Admin feature)
-    const updateOrderTracking = async (orderId, trackingData) => {
-        try {
-            if (user) {
-                const { error } = await supabase
-                    .from('orders')
-                    .update({
-                        tracking_id: trackingData.trackingId,
-                        courier_partner: trackingData.courierPartner,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', orderId);
-
-                if (error) throw error;
-            }
-        } catch (err) {
-            console.error('Error updating tracking in Supabase:', err);
-        }
-
-        setOrders(prev => prev.map(order =>
-            order.id === orderId ? {
-                ...order,
-                trackingId: trackingData.trackingId,
-                courierPartner: trackingData.courierPartner
-            } : order
-        ));
-
-        return { success: true };
     };
 
     return (
@@ -637,6 +306,9 @@ export const ShopProvider = ({ children }) => {
             isOwner,
             siteConfig,
             storeSettings,
+            user,
+            isLoadingAuth,
+            isProductsLoading,
             addToCart,
             updateQuantity,
             removeFromCart,
@@ -646,18 +318,12 @@ export const ShopProvider = ({ children }) => {
             updateProduct,
             deleteProduct,
             updateSiteConfig,
-            loginAdmin,
-            logoutAdmin,
-            user,
-            isLoadingAuth,
-            isProductsLoading,
             loginUser,
             registerUser,
             logoutUser,
             getProductPrice,
             updateOrderStatus,
             updateOrderTracking,
-            fetchAllOrders,
             fetchProducts
         }}>
             {children}

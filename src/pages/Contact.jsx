@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Phone, MessageCircle, Loader, Send, AlertCircle } from 'lucide-react';
 import FadeIn from '../components/FadeIn';
 import emailjs from '@emailjs/browser';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 const Contact = () => {
     const [sent, setSent] = useState(false);
@@ -20,17 +20,12 @@ const Contact = () => {
         setError('');
 
         try {
-            // 1. Save to Supabase (Record Keeping)
-            const { error: sbError } = await supabase
-                .from('contact_inquiries')
-                .insert([{
-                    name: formData.name,
-                    contact: formData.contact,
-                    requirement: formData.requirement,
-                    created_at: new Date().toISOString()
-                }]);
-
-            if (sbError) console.error('Supabase save error:', sbError);
+            // 1. Save to MongoDB (Record Keeping)
+            await api.post('/contact', {
+                name: formData.name,
+                contact: formData.contact,
+                requirement: formData.requirement
+            });
 
             // 2. Send via EmailJS (Optional if keys are set)
             const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_default';
