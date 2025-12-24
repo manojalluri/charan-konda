@@ -32,4 +32,9 @@ const orderSchema = new mongoose.Schema({
     updated_at: { type: Date, default: Date.now }
 });
 
+orderSchema.index({ user_id: 1 });
+orderSchema.index({ user_email: 1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ id: 1 }, { unique: true });
+
 module.exports = mongoose.model('Order', orderSchema);

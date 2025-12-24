@@ -129,7 +129,7 @@ export const ShopProvider = ({ children }) => {
                     loadUserOrders(user.email, user.id || user._id);
                 }
             }
-        }, 5000); // Poll every 5 seconds
+        }, 30000); // Poll every 30 seconds for background updates (optimized from 5s)
 
         return () => clearInterval(intervalId);
     }, [user]);

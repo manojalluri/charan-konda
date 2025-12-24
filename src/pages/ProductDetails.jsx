@@ -135,6 +135,7 @@ const ProductDetails = () => {
                         <img
                             src={product.image}
                             alt={product.name}
+                            loading="lazy"
                             className="w-full max-h-[350px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500 relative z-10"
                         />
                     </FadeIn>
@@ -184,7 +185,7 @@ const ProductDetails = () => {
                                                 ₹{cutPrice}
                                                 <span className="text-xs text-[#93959F] font-medium ml-1">/kg</span>
                                             </div>
-                                            {cut === 'Cut & Clean' && priceInfo.breakdown && (
+                                            {isSelected && cut !== 'Uncut' && priceInfo.breakdown && (
                                                 <div className="mt-2 pt-2 border-t border-gray-200">
                                                     {priceInfo.breakdown.map((item, idx) => (
                                                         <div key={idx} className="flex justify-between text-xs text-[#60646C] mt-1">

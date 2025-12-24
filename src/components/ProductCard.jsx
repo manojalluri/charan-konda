@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Minus, Info } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -32,16 +32,16 @@ const ProductCard = ({ product }) => {
     };
 
     return (
-
         <div
             onClick={() => setIsExpanded(!isExpanded)}
             className="bg-white rounded-3xl shadow-card border border-gray-100 overflow-hidden hover:shadow-float transition-all duration-300 group flex flex-col h-full relative cursor-pointer"
         >
             {/* Image Area */}
-            <Link to={`/product/${product._id || product.id}`} className="relative h-44 overflow-hidden block">
+            <Link to={`/product/${product._id || product.id}`} className="relative h-44 overflow-hidden block" onClick={(e) => e.stopPropagation()}>
                 <img
                     src={product.image}
                     alt={product.name}
+                    loading="lazy"
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                 />
                 {!product.stock && (
@@ -138,4 +138,4 @@ const ProductCard = ({ product }) => {
     );
 };
 
-export default ProductCard;
+export default memo(ProductCard);
