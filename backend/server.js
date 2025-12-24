@@ -16,22 +16,12 @@ const Contact = require('./models/Contact');
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
-// --- DEBUGGING LOGS (View these in Render Logs) ---
+// --- DEBUGGING LOGS ---
 console.log("--- SERVER STARTING ---");
-console.log("Current Directory:", __dirname);
-console.log("Environment Keys Available:", Object.keys(process.env));
-console.log("MONGODB_URI is set:", !!process.env.MONGODB_URI);
-console.log("JWT_SECRET is set:", !!process.env.JWT_SECRET);
-console.log("-----------------------");
 
 // Validate Environment Variables
 if (!process.env.MONGODB_URI) {
     console.error('❌ FATAL ERROR: MONGODB_URI is missing!');
-    console.error('👉 ACTION REQUIRED: Go to Render Dashboard -> Environment -> Add MONGODB_URI');
-    process.exit(1);
-}
-if (!process.env.JWT_SECRET) {
-    console.error('❌ FATAL ERROR: JWT_SECRET is missing!');
     process.exit(1);
 }
 
@@ -39,32 +29,15 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(compression());
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 // Health Check
 app.get('/', (req, res) => res.json({ status: 'API is running' }));
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI;
-
-mongoose.connect(MONGODB_URI)
-    .then(() => {
-        console.log('MongoDB Connected');
-        // Self-ping to keep Render awake (Free Tier Workaround)
-        const selfPing = () => {
-            const url = `https://charan-konda.onrender.com/`;
-            console.log('Self-pinging to stay awake...');
-            fetch(url).catch(() => { });
-        };
-        // Ping every 5 minutes to be safe (Render sleep is 15 mins)
-        setInterval(selfPing, 300000);
-        selfPing(); // Initial ping
-    })
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('MongoDB Connected'))
     .catch(err => console.error('MongoDB Connection Error:', err));
 
 // --- MIDDLEWARE ---
@@ -95,12 +68,9 @@ const adminOnly = (req, res, next) => {
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { name, email, phone, password } = req.body;
-
-        // Validation
         if (!phone || !password || !name) {
             return res.status(400).json({ message: 'Name, Phone and Password are required.' });
         }
-
         const existingUser = await User.findOne({ phone });
         if (existingUser) return res.status(400).json({ message: 'User with this phone number already exists' });
 
@@ -118,15 +88,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { phone, email, password } = req.body;
-
-        // Support both phone (new) and email (admin/legacy)
-        let user;
-        if (phone) {
-            user = await User.findOne({ phone });
-        } else if (email) {
-            user = await User.findOne({ email });
-        }
-
+        let user = phone ? await User.findOne({ phone }) : await User.findOne({ email });
         if (!user) return res.status(400).json({ message: 'User not found' });
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -142,9 +104,10 @@ app.post('/api/auth/login', async (req, res) => {
 // --- PRODUCT ROUTES ---
 app.get('/api/products', async (req, res) => {
     try {
-        const products = await Product.find().sort({ name: 1 });
-        // Set Cache-Control for faster loading of products
-        res.set('Cache-Control', 'public, max-age=60');
+        const products = await Product.find()
+            .select('name price category image stock rating description cuts')
+            .sort({ name: 1 })
+            .lean();
         res.json(products);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -184,19 +147,13 @@ app.get('/api/orders', authenticate, async (req, res) => {
     try {
         const { email, userId } = req.query;
         let query = {};
-
-        // If not admin, strictly enforce user isolation
         if (req.user.role !== 'admin' && req.user.role !== 'owner') {
-            // Regular users can ONLY see their own orders
-            // We use the ID from the token for security, not just the query param
             query.user_id = req.user.id;
         } else {
-            // Admins can filter by email/userId or see all
             if (email) query.user_email = email;
             if (userId) query.user_id = userId;
         }
-
-        const orders = await Order.find(query).sort({ created_at: -1 });
+        const orders = await Order.find(query).sort({ created_at: -1 }).lean();
         res.json(orders);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -206,30 +163,21 @@ app.get('/api/orders', authenticate, async (req, res) => {
 app.post('/api/orders', async (req, res) => {
     try {
         const orderData = req.body;
-
-        // Basic validation
         if (!orderData.id || !orderData.user_email) {
             return res.status(400).json({ message: "Missing required order fields" });
         }
-
-        // Security check: If a token is provided, ensure user_id matches
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             try {
                 const token = authHeader.split(' ')[1];
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                // If user is logged in, their order MUST be linked to their account
                 orderData.user_id = decoded.id;
-            } catch (err) {
-                // Invalid token - optionally allow guest or reject
-            }
+            } catch (err) { }
         }
-
         const order = new Order(orderData);
         await order.save();
         res.status(201).json(order);
     } catch (err) {
-        console.error("Order Save Error:", err);
         res.status(500).json({ message: err.message });
     }
 });
@@ -246,36 +194,21 @@ app.put('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
 app.delete('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
     try {
         const orderId = req.params.id;
-        console.log(`Attempting to delete order: ${orderId}`);
-
-        // Try to find by custom id first, then by MongoDB _id
-        let query = { id: orderId };
-
-        // If not found by custom ID, try _id if it's a valid object ID
-        let order = await Order.findOneAndDelete(query);
-
+        let order = await Order.findOneAndDelete({ id: orderId });
         if (!order && mongoose.Types.ObjectId.isValid(orderId)) {
-            console.log(`Order not found by custom ID, trying _id: ${orderId}`);
             order = await Order.findOneAndDelete({ _id: orderId });
         }
-
-        if (!order) {
-            console.warn(`Order not found for deletion: ${orderId}`);
-            return res.status(404).json({ message: 'Order not found in database' });
-        }
-
-        console.log(`Successfully deleted order: ${orderId}`);
-        res.json({ success: true, message: 'Order deleted successfully' });
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        res.json({ success: true, message: 'Order deleted' });
     } catch (err) {
-        console.error('Delete Order Error:', err);
-        res.status(500).json({ message: 'Internal server error: ' + err.message });
+        res.status(500).json({ message: err.message });
     }
 });
 
 // --- CONTACT ROUTES ---
 app.get('/api/contact', authenticate, adminOnly, async (req, res) => {
     try {
-        const contacts = await Contact.find().sort({ created_at: -1 });
+        const contacts = await Contact.find().sort({ created_at: -1 }).lean();
         res.json(contacts);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -294,7 +227,7 @@ app.post('/api/contact', async (req, res) => {
 // --- SETTINGS ROUTES ---
 app.get('/api/settings/:id', async (req, res) => {
     try {
-        const setting = await Setting.findOne({ id: req.params.id });
+        const setting = await Setting.findOne({ id: req.params.id }).lean();
         res.json(setting);
     } catch (err) {
         res.status(500).json({ message: err.message });

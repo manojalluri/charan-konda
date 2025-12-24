@@ -120,9 +120,15 @@ const Home = () => {
                                 </FadeIn>
                             ))
                         ) : (
-                            <div className="col-span-full text-center py-12">
-                                <p className="text-gray-500 text-lg">Loading products...</p>
-                            </div>
+                            // Elegant Skeleton State
+                            Array(4).fill(0).map((_, i) => (
+                                <div key={i} className="bg-gray-50 rounded-3xl h-[350px] animate-pulse border border-gray-100 flex flex-col p-4">
+                                    <div className="bg-gray-200 h-44 rounded-2xl mb-4"></div>
+                                    <div className="bg-gray-200 h-6 w-3/4 rounded mb-2"></div>
+                                    <div className="bg-gray-200 h-4 w-1/2 rounded mb-4"></div>
+                                    <div className="mt-auto bg-gray-200 h-10 w-full rounded-xl"></div>
+                                </div>
+                            ))
                         )}
                     </div>
 

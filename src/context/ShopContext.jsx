@@ -31,7 +31,6 @@ export const ShopProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isOwner, setIsOwner] = useState(false);
     const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-    const [isApiWakingUp, setIsApiWakingUp] = useState(false);
 
     // Default Config
     const defaultConfig = {
@@ -61,36 +60,23 @@ export const ShopProvider = ({ children }) => {
     // --- INITIALIZATION ---
     useEffect(() => {
         const init = async () => {
-            try {
-                // 1. Instant Load from Cache
-                const savedCart = localStorage.getItem('cutora-cart');
-                if (savedCart) setCart(JSON.parse(savedCart));
+            // Load local data synchronously
+            const savedCart = localStorage.getItem('cutora-cart');
+            if (savedCart) setCart(JSON.parse(savedCart));
 
-                const savedProducts = localStorage.getItem('cutora-products-cache');
-                if (savedProducts) {
-                    setProducts(JSON.parse(savedProducts));
-                    setIsProductsLoading(false); // Immediate show if cached
-                }
-
-                const savedConfig = localStorage.getItem('cutora-site-config');
-                if (savedConfig) setSiteConfig(prev => ({ ...prev, ...JSON.parse(savedConfig) }));
-
-                const savedAuth = localStorage.getItem('cutora-user');
-                if (savedAuth) {
-                    const parsed = JSON.parse(savedAuth);
-                    setUser(parsed);
-                    setIsAdmin(parsed.role === 'admin' || parsed.role === 'owner');
-                    setIsOwner(parsed.role === 'owner');
-                }
-
-                // 2. Background Revalidate (SWR)
-                // We DON'T await this, so the UI can show cached data instantly
-                fetchAllData();
-                setIsLoadingAuth(false);
-            } catch (err) {
-                console.error("Initialization error:", err);
-                setIsLoadingAuth(false);
+            const savedAuth = localStorage.getItem('cutora-user');
+            if (savedAuth) {
+                const parsed = JSON.parse(savedAuth);
+                setUser(parsed);
+                setIsAdmin(parsed.role === 'admin' || parsed.role === 'owner');
+                setIsOwner(parsed.role === 'owner');
             }
+
+            // Mark auth as ready so UI can mount
+            setIsLoadingAuth(false);
+
+            // Fetch heavy data in background
+            fetchAllData();
         };
         init();
     }, []);
@@ -103,26 +89,16 @@ export const ShopProvider = ({ children }) => {
     // --- ACTIONS ---
 
     const fetchProducts = async (background = false) => {
-        // Only show spinner if we have NO data at all
-        if (!background && products.length < 2) setIsProductsLoading(true);
-
-        // Detection for slow API (Render Sleep)
-        const timeoutId = setTimeout(() => {
-            if (isProductsLoading || background) setIsApiWakingUp(true);
-        }, 3000);
-
+        if (!background) setIsProductsLoading(true);
         try {
             const data = await api.get('/products');
             if (data && data.length > 0) {
                 setProducts(data);
-                localStorage.setItem('cutora-products-cache', JSON.stringify(data));
-                setIsApiWakingUp(false);
             }
         } catch (err) {
             console.error('Error fetching products:', err);
         } finally {
-            clearTimeout(timeoutId);
-            setIsProductsLoading(false);
+            if (!background) setIsProductsLoading(false);
         }
     };
 
@@ -130,33 +106,12 @@ export const ShopProvider = ({ children }) => {
         try {
             const data = await api.get('/settings/site_config');
             if (data && data.value) {
-                const newConfig = { ...siteConfig, ...data.value };
-                setSiteConfig(newConfig);
-                localStorage.setItem('cutora-site-config', JSON.stringify(data.value));
+                setSiteConfig(prev => ({ ...prev, ...data.value }));
             }
         } catch (err) {
             console.error('Error fetching settings:', err);
         }
     };
-
-    // --- POLLING FOR UPDATES ---
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            fetchProducts(true);
-            fetchSettings();
-
-            if (user) {
-                if (user.role === 'admin' || user.role === 'owner') {
-                    fetchAllOrders();
-                } else {
-                    loadUserOrders(user.email, user.id || user._id);
-                }
-            }
-        }, 30000); // Poll every 30 seconds for background updates (optimized from 5s)
-
-        return () => clearInterval(intervalId);
-    }, [user]);
-
 
     const fetchAllOrders = async () => {
         try {
@@ -411,7 +366,6 @@ export const ShopProvider = ({ children }) => {
             user,
             isLoadingAuth,
             isProductsLoading,
-            isApiWakingUp,
             addToCart,
             updateQuantity,
             removeFromCart,
