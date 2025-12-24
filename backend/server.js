@@ -144,10 +144,17 @@ app.get('/api/orders', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
     try {
-        const order = new Order(req.body);
+        const orderData = req.body;
+        // Basic validation for production safety
+        if (!orderData.id || !orderData.user_email) {
+            console.error("Missing required fields. Received:", orderData);
+            return res.status(400).json({ message: "Missing required order fields (id or user_email)" });
+        }
+        const order = new Order(orderData);
         await order.save();
         res.status(201).json(order);
     } catch (err) {
+        console.error("Order Save Error:", err);
         res.status(500).json({ message: err.message });
     }
 });
