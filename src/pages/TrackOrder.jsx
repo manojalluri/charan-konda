@@ -150,15 +150,15 @@ const TrackOrder = () => {
                                     <div className="mt-8 pt-6 border-t border-dashed border-gray-200 space-y-3">
                                         <div className="flex justify-between text-sm text-gray-500 font-medium">
                                             <span>Subtotal</span>
-                                            <span className="text-[#1C1C1C]">₹{order.itemTotal}</span>
+                                            <span className="text-[#1C1C1C]">₹{order.itemTotal || order.item_total || 0}</span>
                                         </div>
                                         <div className="flex justify-between text-sm text-gray-500 font-medium">
                                             <span>Delivery Fee</span>
-                                            <span className="text-[#1C1C1C]">₹{order.deliveryFee}</span>
+                                            <span className="text-[#1C1C1C]">₹{order.deliveryFee || order.delivery_fee || 0}</span>
                                         </div>
                                         <div className="flex justify-between text-lg font-black text-[#1C1C1C] pt-2">
                                             <span>Total Paid</span>
-                                            <span className="text-[#FC8019]">₹{order.finalAmount}</span>
+                                            <span className="text-[#FC8019]">₹{order.finalAmount || order.final_amount || 0}</span>
                                         </div>
                                     </div>
                                 </div>

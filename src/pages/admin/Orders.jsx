@@ -254,7 +254,7 @@ const Orders = () => {
                                         <div className="text-sm">
                                             <p className="font-medium text-gray-800">{order.customer?.name || 'Guest'}</p>
                                             <p className="text-xs text-gray-500 line-clamp-1">
-                                                {order.items.length} items • ₹{order.finalAmount}
+                                                {order.items.length} items • ₹{order.finalAmount || order.final_amount || 0}
                                             </p>
                                         </div>
                                         <button
@@ -340,19 +340,19 @@ const Orders = () => {
                                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Item Total</span>
-                                        <span className="font-medium text-gray-900">₹{selectedOrder.itemTotal || 0}</span>
+                                        <span className="font-medium text-gray-900">₹{selectedOrder.itemTotal || selectedOrder.item_total || 0}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Delivery Charges</span>
-                                        <span className="font-medium text-gray-900">₹{selectedOrder.deliveryFee || 0}</span>
+                                        <span className="font-medium text-gray-900">₹{selectedOrder.deliveryFee || selectedOrder.delivery_fee || 0}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Taxes & Charges</span>
-                                        <span className="font-medium text-gray-900">₹{selectedOrder.taxesAndCharges || 0}</span>
+                                        <span className="font-medium text-gray-900">₹{selectedOrder.taxesAndCharges || selectedOrder.taxes_and_charges || 0}</span>
                                     </div>
                                     <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-300">
                                         <span className="text-gray-900">Total</span>
-                                        <span className="text-orange-600">₹{selectedOrder.finalAmount || 0}</span>
+                                        <span className="text-orange-600">₹{selectedOrder.finalAmount || selectedOrder.final_amount || 0}</span>
                                     </div>
                                 </div>
                             </div>

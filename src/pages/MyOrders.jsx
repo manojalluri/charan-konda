@@ -93,7 +93,7 @@ const MyOrders = () => {
                     <span className="text-sm text-[#60646C]">
                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                     </span>
-                    <span className="font-extrabold text-lg text-[#FC8019]">₹{order.finalAmount}</span>
+                    <span className="font-extrabold text-lg text-[#FC8019]">₹{order.finalAmount || order.final_amount || 0}</span>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                     {order.items.slice(0, 3).map((item, idx) => (
@@ -159,8 +159,8 @@ const MyOrders = () => {
                                     return (
                                         <div key={step.id} className="relative z-10 flex flex-col items-center">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${isCompleted || isActive
-                                                    ? 'bg-orange-500 border-orange-100 text-white shadow-lg shadow-orange-200'
-                                                    : 'bg-white border-gray-100 text-gray-300'
+                                                ? 'bg-orange-500 border-orange-100 text-white shadow-lg shadow-orange-200'
+                                                : 'bg-white border-gray-100 text-gray-300'
                                                 }`}>
                                                 <StepIcon size={18} />
                                             </div>
@@ -244,19 +244,19 @@ const MyOrders = () => {
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-[#60646C]">Item Total</span>
-                                <span className="font-semibold text-[#1C1C1C]">₹{order.itemTotal}</span>
+                                <span className="font-semibold text-[#1C1C1C]">₹{order.itemTotal || order.item_total || 0}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-[#60646C]">Delivery Fee</span>
-                                <span className="font-semibold text-[#1C1C1C]">₹{order.deliveryFee}</span>
+                                <span className="font-semibold text-[#1C1C1C]">₹{order.deliveryFee || order.delivery_fee || 0}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-[#60646C]">Taxes & Charges</span>
-                                <span className="font-semibold text-[#1C1C1C]">₹{order.taxesAndCharges}</span>
+                                <span className="font-semibold text-[#1C1C1C]">₹{order.taxesAndCharges || order.taxes_and_charges || 0}</span>
                             </div>
                             <div className="pt-2 border-t border-orange-300 flex justify-between">
                                 <span className="font-bold text-[#1C1C1C]">Total Paid</span>
-                                <span className="font-extrabold text-xl text-[#FC8019]">₹{order.finalAmount}</span>
+                                <span className="font-extrabold text-xl text-[#FC8019]">₹{order.finalAmount || order.final_amount || 0}</span>
                             </div>
                         </div>
                     </div>

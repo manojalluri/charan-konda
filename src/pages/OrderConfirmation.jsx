@@ -88,19 +88,19 @@ const OrderConfirmation = () => {
                             <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500 font-medium">Item Total</span>
-                                    <span className="text-gray-900 font-semibold">₹{order.itemTotal}</span>
+                                    <span className="text-gray-900 font-semibold">₹{order.itemTotal || order.item_total || 0}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500 font-medium">Delivery Fee</span>
-                                    <span className="text-gray-900 font-semibold">₹{order.deliveryFee}</span>
+                                    <span className="text-gray-900 font-semibold">₹{order.deliveryFee || order.delivery_fee || 0}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500 font-medium">Taxes & Charges</span>
-                                    <span className="text-gray-900 font-semibold">₹{order.taxesAndCharges}</span>
+                                    <span className="text-gray-900 font-semibold">₹{order.taxesAndCharges || order.taxes_and_charges || 0}</span>
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center bg-gray-50 p-4 rounded-xl">
                                     <span className="font-bold text-gray-700">Total Amount</span>
-                                    <span className="text-2xl font-extrabold text-orange-600">₹{order.finalAmount}</span>
+                                    <span className="text-2xl font-extrabold text-orange-600">₹{order.finalAmount || order.final_amount || 0}</span>
                                 </div>
                             </div>
                         </div>
