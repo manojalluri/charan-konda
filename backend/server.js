@@ -15,13 +15,22 @@ const Contact = require('./models/Contact');
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+// --- DEBUGGING LOGS (View these in Render Logs) ---
+console.log("--- SERVER STARTING ---");
+console.log("Current Directory:", __dirname);
+console.log("Environment Keys Available:", Object.keys(process.env));
+console.log("MONGODB_URI is set:", !!process.env.MONGODB_URI);
+console.log("JWT_SECRET is set:", !!process.env.JWT_SECRET);
+console.log("-----------------------");
+
 // Validate Environment Variables
 if (!process.env.MONGODB_URI) {
-    console.error('FATAL ERROR: MONGODB_URI is not defined in .env variable');
+    console.error('❌ FATAL ERROR: MONGODB_URI is missing!');
+    console.error('👉 ACTION REQUIRED: Go to Render Dashboard -> Environment -> Add MONGODB_URI');
     process.exit(1);
 }
 if (!process.env.JWT_SECRET) {
-    console.error('FATAL ERROR: JWT_SECRET is not defined in .env variable');
+    console.error('❌ FATAL ERROR: JWT_SECRET is missing!');
     process.exit(1);
 }
 
