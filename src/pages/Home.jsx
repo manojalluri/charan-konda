@@ -23,7 +23,12 @@ const Home = () => {
             {/* Hero Section */}
             <section className="relative h-[70vh] flex items-center justify-center overflow-hidden bg-[#1C1C1C]">
                 <div className="absolute inset-0">
-
+                    <img
+                        src={siteConfig.heroImage || "/hero.png"}
+                        alt="Hero"
+                        fetchpriority="high"
+                        className="w-full h-full object-cover"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1C] via-[#1C1C1C]/40 to-transparent"></div>
                 </div>
 

@@ -61,9 +61,18 @@ export const ShopProvider = ({ children }) => {
     useEffect(() => {
         const init = async () => {
             try {
-                // Load local data
+                // 1. Instant Load from Cache
                 const savedCart = localStorage.getItem('cutora-cart');
                 if (savedCart) setCart(JSON.parse(savedCart));
+
+                const savedProducts = localStorage.getItem('cutora-products-cache');
+                if (savedProducts) {
+                    setProducts(JSON.parse(savedProducts));
+                    setIsProductsLoading(false); // Immediate show if cached
+                }
+
+                const savedConfig = localStorage.getItem('cutora-site-config');
+                if (savedConfig) setSiteConfig(prev => ({ ...prev, ...JSON.parse(savedConfig) }));
 
                 const savedAuth = localStorage.getItem('cutora-user');
                 if (savedAuth) {
@@ -73,8 +82,8 @@ export const ShopProvider = ({ children }) => {
                     setIsOwner(parsed.role === 'owner');
                 }
 
-                // Fetch data from MongoDB
-                await fetchAllData();
+                // 2. Background Revalidate (SWR)
+                fetchAllData();
             } catch (err) {
                 console.error("Initialization error:", err);
             } finally {
@@ -92,16 +101,18 @@ export const ShopProvider = ({ children }) => {
     // --- ACTIONS ---
 
     const fetchProducts = async (background = false) => {
-        if (!background) setIsProductsLoading(true);
+        // Only show spinner if we have NO data at all
+        if (!background && products.length < 5) setIsProductsLoading(true);
         try {
             const data = await api.get('/products');
             if (data && data.length > 0) {
                 setProducts(data);
+                localStorage.setItem('cutora-products-cache', JSON.stringify(data));
             }
         } catch (err) {
             console.error('Error fetching products:', err);
         } finally {
-            if (!background) setIsProductsLoading(false);
+            setIsProductsLoading(false);
         }
     };
 
@@ -109,7 +120,9 @@ export const ShopProvider = ({ children }) => {
         try {
             const data = await api.get('/settings/site_config');
             if (data && data.value) {
-                setSiteConfig(prev => ({ ...prev, ...data.value }));
+                const newConfig = { ...siteConfig, ...data.value };
+                setSiteConfig(newConfig);
+                localStorage.setItem('cutora-site-config', JSON.stringify(data.value));
             }
         } catch (err) {
             console.error('Error fetching settings:', err);
