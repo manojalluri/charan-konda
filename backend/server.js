@@ -53,7 +53,18 @@ app.get('/', (req, res) => res.json({ status: 'API is running' }));
 const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose.connect(MONGODB_URI)
-    .then(() => console.log('MongoDB Connected'))
+    .then(() => {
+        console.log('MongoDB Connected');
+        // Self-ping to keep Render awake (Free Tier Workaround)
+        const selfPing = () => {
+            const url = `https://charan-konda.onrender.com/`;
+            console.log('Self-pinging to stay awake...');
+            fetch(url).catch(() => { });
+        };
+        // Ping every 5 minutes to be safe (Render sleep is 15 mins)
+        setInterval(selfPing, 300000);
+        selfPing(); // Initial ping
+    })
     .catch(err => console.error('MongoDB Connection Error:', err));
 
 // --- MIDDLEWARE ---

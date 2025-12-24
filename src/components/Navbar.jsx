@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, Fish, User, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Menu, X, Fish, User, ChevronDown, Zap } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
-    const { cart, siteConfig, user, logoutUser } = useShop(); // Read siteConfig, user state
+    const { cart, siteConfig, user, logoutUser, isApiWakingUp } = useShop();
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
 
@@ -39,9 +39,21 @@ const Navbar = () => {
                             </div>
                         )}
                         <div className="flex flex-col">
-                            <span className="text-xl md:text-2xl font-extrabold tracking-tight text-[#1C1C1C] leading-none text-nowrap">
-                                {(siteConfig.brandName || "CUTORA FRESH").split(" ")[0]}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xl md:text-2xl font-extrabold tracking-tight text-[#1C1C1C] leading-none text-nowrap">
+                                    {(siteConfig.brandName || "CUTORA FRESH").split(" ")[0]}
+                                </span>
+                                {isApiWakingUp && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-50 rounded-full border border-orange-100"
+                                    >
+                                        <Zap size={10} className="text-[#FC8019] animate-pulse" />
+                                        <span className="text-[8px] font-black text-[#FC8019] uppercase tracking-tighter">Warming Up</span>
+                                    </motion.div>
+                                )}
+                            </div>
                             <span className="text-[10px] md:text-xs font-bold text-[#FC8019] uppercase tracking-[0.2em] leading-tight">
                                 {(siteConfig.brandName || "CUTORA FRESH").split(" ").slice(1).join(" ")}
                             </span>

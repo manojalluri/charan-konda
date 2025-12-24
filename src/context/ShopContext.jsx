@@ -31,6 +31,7 @@ export const ShopProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isOwner, setIsOwner] = useState(false);
     const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+    const [isApiWakingUp, setIsApiWakingUp] = useState(false);
 
     // Default Config
     const defaultConfig = {
@@ -83,10 +84,11 @@ export const ShopProvider = ({ children }) => {
                 }
 
                 // 2. Background Revalidate (SWR)
+                // We DON'T await this, so the UI can show cached data instantly
                 fetchAllData();
+                setIsLoadingAuth(false);
             } catch (err) {
                 console.error("Initialization error:", err);
-            } finally {
                 setIsLoadingAuth(false);
             }
         };
@@ -102,16 +104,24 @@ export const ShopProvider = ({ children }) => {
 
     const fetchProducts = async (background = false) => {
         // Only show spinner if we have NO data at all
-        if (!background && products.length < 5) setIsProductsLoading(true);
+        if (!background && products.length < 2) setIsProductsLoading(true);
+
+        // Detection for slow API (Render Sleep)
+        const timeoutId = setTimeout(() => {
+            if (isProductsLoading || background) setIsApiWakingUp(true);
+        }, 3000);
+
         try {
             const data = await api.get('/products');
             if (data && data.length > 0) {
                 setProducts(data);
                 localStorage.setItem('cutora-products-cache', JSON.stringify(data));
+                setIsApiWakingUp(false);
             }
         } catch (err) {
             console.error('Error fetching products:', err);
         } finally {
+            clearTimeout(timeoutId);
             setIsProductsLoading(false);
         }
     };
@@ -401,6 +411,7 @@ export const ShopProvider = ({ children }) => {
             user,
             isLoadingAuth,
             isProductsLoading,
+            isApiWakingUp,
             addToCart,
             updateQuantity,
             removeFromCart,
