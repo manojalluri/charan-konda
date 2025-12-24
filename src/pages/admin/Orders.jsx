@@ -88,7 +88,7 @@ const Orders = () => {
                     setSelectedOrder(null);
                 }
             } else {
-                alert('Failed to delete order. Please try again.');
+                alert(`Failed to delete order: ${result.message || 'Please try again.'}`);
             }
         }
     };

@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const compression = require('compression');
 
 // Models
 const Product = require('./models/Product');
@@ -37,7 +38,7 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+app.use(compression());
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -131,6 +132,8 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/products', async (req, res) => {
     try {
         const products = await Product.find().sort({ name: 1 });
+        // Set Cache-Control for faster loading of products
+        res.set('Cache-Control', 'public, max-age=60');
         res.json(products);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -231,10 +234,30 @@ app.put('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
 
 app.delete('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
     try {
-        await Order.findOneAndDelete({ id: req.params.id });
-        res.json({ success: true });
+        const orderId = req.params.id;
+        console.log(`Attempting to delete order: ${orderId}`);
+
+        // Try to find by custom id first, then by MongoDB _id
+        let query = { id: orderId };
+
+        // If not found by custom ID, try _id if it's a valid object ID
+        let order = await Order.findOneAndDelete(query);
+
+        if (!order && mongoose.Types.ObjectId.isValid(orderId)) {
+            console.log(`Order not found by custom ID, trying _id: ${orderId}`);
+            order = await Order.findOneAndDelete({ _id: orderId });
+        }
+
+        if (!order) {
+            console.warn(`Order not found for deletion: ${orderId}`);
+            return res.status(404).json({ message: 'Order not found in database' });
+        }
+
+        console.log(`Successfully deleted order: ${orderId}`);
+        res.json({ success: true, message: 'Order deleted successfully' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Delete Order Error:', err);
+        res.status(500).json({ message: 'Internal server error: ' + err.message });
     }
 });
 

@@ -65,7 +65,16 @@ export const api = {
             method: 'DELETE',
             headers: getHeaders()
         });
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+            let errorText = 'Unknown error';
+            try {
+                const errorData = await res.json();
+                errorText = errorData.message || errorData.error || errorText;
+            } catch (e) {
+                errorText = await res.text();
+            }
+            throw new Error(errorText);
+        }
         return res.json();
     }
 };
