@@ -1,9 +1,15 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-dotenv.config();
+const path = require('path');
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://CUTORA:Manoj%402006@cluster0.po1tmgh.mongodb.net/?appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+    console.error("❌ Error: MONGODB_URI is not defined in .env");
+    process.exit(1);
+}
 
 const testConnection = async () => {
     try {

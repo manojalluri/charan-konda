@@ -24,6 +24,10 @@ export const ShopProvider = ({ children }) => {
         heroImage: "/hero.png",
         heroTitle: "Fresh Meats. Clean Cut. Delivered Daily.",
         heroSubtitle: "Hygienically sourced and processed premium meats & seafood.",
+        deliveryCharge: 40,
+        freeDeliveryAbove: 1000,
+        taxRate: 5,
+        minOrderValue: 200,
     };
 
     const [siteConfig, setSiteConfig] = useState(defaultConfig);
@@ -71,8 +75,9 @@ export const ShopProvider = ({ children }) => {
     }, [cart]);
 
     // --- ACTIONS ---
-    const fetchProducts = async () => {
-        setIsProductsLoading(true);
+
+    const fetchProducts = async (background = false) => {
+        if (!background) setIsProductsLoading(true);
         try {
             const data = await api.get('/products');
             if (data && data.length > 0) {
@@ -81,7 +86,7 @@ export const ShopProvider = ({ children }) => {
         } catch (err) {
             console.error('Error fetching products:', err);
         } finally {
-            setIsProductsLoading(false);
+            if (!background) setIsProductsLoading(false);
         }
     };
 
@@ -95,6 +100,25 @@ export const ShopProvider = ({ children }) => {
             console.error('Error fetching settings:', err);
         }
     };
+
+    // --- POLLING FOR UPDATES ---
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            fetchProducts(true);
+            fetchSettings();
+
+            if (user) {
+                if (user.role === 'admin' || user.role === 'owner') {
+                    fetchAllOrders();
+                } else {
+                    loadUserOrders(user.email, user.id || user._id);
+                }
+            }
+        }, 5000); // Poll every 5 seconds
+
+        return () => clearInterval(intervalId);
+    }, [user]);
+
 
     const fetchAllOrders = async () => {
         try {
@@ -297,6 +321,19 @@ export const ShopProvider = ({ children }) => {
         return totalCharge;
     };
 
+    // Helper function to calculate delivery fee
+    const calculateDeliveryFee = (itemTotal) => {
+        const deliveryCharge = siteConfig?.deliveryCharge || 40;
+        const freeDeliveryAbove = siteConfig?.freeDeliveryAbove || 1000;
+        return itemTotal >= freeDeliveryAbove ? 0 : deliveryCharge;
+    };
+
+    // Helper function to calculate tax
+    const calculateTax = (itemTotal) => {
+        const taxRate = siteConfig?.taxRate || 5;
+        return Math.round((itemTotal * taxRate) / 100);
+    };
+
     return (
         <ShopContext.Provider value={{
             products,
@@ -325,7 +362,9 @@ export const ShopProvider = ({ children }) => {
             updateOrderStatus,
             updateOrderTracking,
             fetchProducts,
-            fetchAllOrders
+            fetchAllOrders,
+            calculateDeliveryFee,
+            calculateTax
         }}>
             {children}
         </ShopContext.Provider>

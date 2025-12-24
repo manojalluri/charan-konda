@@ -5,7 +5,7 @@ import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
 
 const Cart = () => {
-    const { cart, removeFromCart, updateQuantity, getProductPrice } = useShop();
+    const { cart, removeFromCart, updateQuantity, getProductPrice, calculateDeliveryFee, calculateTax } = useShop();
     const navigate = useNavigate();
 
     // Calculate total using dynamic pricing based on preparation type
@@ -14,8 +14,8 @@ const Cart = () => {
         return sum + (itemPrice * item.quantity);
     }, 0);
 
-    const deliveryFee = 40;
-    const taxesAndCharges = 25;
+    const deliveryFee = calculateDeliveryFee(total);
+    const taxesAndCharges = calculateTax(total);
     const finalTotal = total + deliveryFee + taxesAndCharges;
 
     if (cart.length === 0) {
@@ -57,8 +57,8 @@ const Cart = () => {
                                                         </p>
                                                         <span className="text-[#93959F]">•</span>
                                                         <span className={`text-xs font-bold px-2 py-1 rounded ${item.cut === 'Uncut'
-                                                                ? 'bg-blue-100 text-blue-700'
-                                                                : 'bg-green-100 text-green-700'
+                                                            ? 'bg-blue-100 text-blue-700'
+                                                            : 'bg-green-100 text-green-700'
                                                             }`}>
                                                             {item.cut}
                                                         </span>

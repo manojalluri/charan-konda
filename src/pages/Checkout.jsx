@@ -5,7 +5,7 @@ import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
 
 const Checkout = () => {
-    const { cart, placeOrder, getProductPrice, user } = useShop();
+    const { cart, placeOrder, getProductPrice, user, calculateDeliveryFee, calculateTax } = useShop();
     const navigate = useNavigate();
 
     // Redirect if cart is empty, but only if not placing an order
@@ -48,8 +48,8 @@ const Checkout = () => {
         return sum + (itemPrice * item.quantity);
     }, 0);
 
-    const deliveryFee = 40;
-    const taxesAndCharges = 25;
+    const deliveryFee = calculateDeliveryFee(itemTotal);
+    const taxesAndCharges = calculateTax(itemTotal);
     const finalAmount = itemTotal + deliveryFee + taxesAndCharges;
 
     const handleChange = (e) => {
