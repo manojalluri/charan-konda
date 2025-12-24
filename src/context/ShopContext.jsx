@@ -34,7 +34,7 @@ export const ShopProvider = ({ children }) => {
 
     // Default Config
     const defaultConfig = {
-        logo: null,
+        logo: "/logo.png",
         brandName: "CUTORA FRESH",
         heroImage: "/hero.png",
         heroTitle: "Fresh Meats. Clean Cut. Delivered Daily.",
