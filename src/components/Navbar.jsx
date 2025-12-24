@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, Fish, User } from 'lucide-react';
+import { ShoppingBag, Menu, X, Fish, User, ChevronDown } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -145,9 +145,7 @@ const Navbar = () => {
                                     <User size={18} /> SIGN IN
                                 </Link>
                             )}
-                            <Link to="/admin/login" className="flex items-center gap-2 font-bold text-gray-400 p-2 hover:bg-gray-50 rounded-lg text-xs uppercase tracking-wider mt-4" onClick={() => setIsOpen(false)}>
-                                Partner Login
-                            </Link>
+
                         </div>
                     </motion.div>
                 )}

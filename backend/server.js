@@ -55,6 +55,30 @@ mongoose.connect(MONGODB_URI)
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.error('MongoDB Connection Error:', err));
 
+// --- MIDDLEWARE ---
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Authorization token required' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+};
+
+const adminOnly = (req, res, next) => {
+    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'owner')) {
+        return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+};
+
 // --- AUTH ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
     try {
@@ -113,7 +137,7 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
-app.post('/api/products', async (req, res) => {
+app.post('/api/products', authenticate, adminOnly, async (req, res) => {
     try {
         const product = new Product(req.body);
         await product.save();
@@ -123,7 +147,7 @@ app.post('/api/products', async (req, res) => {
     }
 });
 
-app.put('/api/products/:id', async (req, res) => {
+app.put('/api/products/:id', authenticate, adminOnly, async (req, res) => {
     try {
         const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(product);
@@ -132,7 +156,7 @@ app.put('/api/products/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/products/:id', async (req, res) => {
+app.delete('/api/products/:id', authenticate, adminOnly, async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
         res.json({ message: 'Product deleted' });
@@ -142,12 +166,21 @@ app.delete('/api/products/:id', async (req, res) => {
 });
 
 // --- ORDER ROUTES ---
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', authenticate, async (req, res) => {
     try {
         const { email, userId } = req.query;
         let query = {};
-        if (email) query.user_email = email;
-        if (userId) query.user_id = userId;
+
+        // If not admin, strictly enforce user isolation
+        if (req.user.role !== 'admin' && req.user.role !== 'owner') {
+            // Regular users can ONLY see their own orders
+            // We use the ID from the token for security, not just the query param
+            query.user_id = req.user.id;
+        } else {
+            // Admins can filter by email/userId or see all
+            if (email) query.user_email = email;
+            if (userId) query.user_id = userId;
+        }
 
         const orders = await Order.find(query).sort({ created_at: -1 });
         res.json(orders);
@@ -159,11 +192,25 @@ app.get('/api/orders', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
     try {
         const orderData = req.body;
-        // Basic validation for production safety
+
+        // Basic validation
         if (!orderData.id || !orderData.user_email) {
-            console.error("Missing required fields. Received:", orderData);
-            return res.status(400).json({ message: "Missing required order fields (id or user_email)" });
+            return res.status(400).json({ message: "Missing required order fields" });
         }
+
+        // Security check: If a token is provided, ensure user_id matches
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            try {
+                const token = authHeader.split(' ')[1];
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                // If user is logged in, their order MUST be linked to their account
+                orderData.user_id = decoded.id;
+            } catch (err) {
+                // Invalid token - optionally allow guest or reject
+            }
+        }
+
         const order = new Order(orderData);
         await order.save();
         res.status(201).json(order);
@@ -173,9 +220,8 @@ app.post('/api/orders', async (req, res) => {
     }
 });
 
-app.put('/api/orders/:id', async (req, res) => {
+app.put('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
     try {
-        // Find by the custom string id, not _id
         const order = await Order.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
         res.json(order);
     } catch (err) {
@@ -183,7 +229,7 @@ app.put('/api/orders/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/orders/:id', async (req, res) => {
+app.delete('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
     try {
         await Order.findOneAndDelete({ id: req.params.id });
         res.json({ success: true });
@@ -193,7 +239,7 @@ app.delete('/api/orders/:id', async (req, res) => {
 });
 
 // --- CONTACT ROUTES ---
-app.get('/api/contact', async (req, res) => {
+app.get('/api/contact', authenticate, adminOnly, async (req, res) => {
     try {
         const contacts = await Contact.find().sort({ created_at: -1 });
         res.json(contacts);
@@ -221,7 +267,7 @@ app.get('/api/settings/:id', async (req, res) => {
     }
 });
 
-app.post('/api/settings', async (req, res) => {
+app.post('/api/settings', authenticate, adminOnly, async (req, res) => {
     try {
         const { id, value } = req.body;
         const setting = await Setting.findOneAndUpdate(

@@ -6,7 +6,12 @@ dotenv.config();
 
 const User = require('./models/User');
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://CUTORA:Manoj%402006@cluster0.po1tmgh.mongodb.net/?appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+    console.error("❌ MONGODB_URI is not defined in .env");
+    process.exit(1);
+}
 
 const createAdminUser = async () => {
     try {
