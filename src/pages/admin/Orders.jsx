@@ -38,7 +38,7 @@ const Orders = () => {
         }
     };
 
-    const statuses = ['All', 'Confirmed', 'Packed', 'Shipping', 'Delivered', 'Cancelled'];
+    const statuses = ['All', 'Pending', 'Confirmed', 'Processing', 'Packed', 'Shipping', 'Delivered', 'Cancelled'];
 
     const getStatusColor = (status) => {
         const colors = {
@@ -204,13 +204,15 @@ const Orders = () => {
                                                 onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                                                 className={`text-xs px-2.5 py-1.5 rounded-full font-bold border-0 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer shadow-sm ${getStatusColor(order.status)}`}
                                             >
+                                                <option value="Pending">Pending</option>
                                                 <option value="Confirmed">Confirmed</option>
+                                                <option value="Processing">Processing</option>
                                                 <option value="Packed">Packed</option>
                                                 <option value="Shipping">Shipping</option>
                                                 <option value="Delivered">Delivered</option>
                                                 <option value="Cancelled">Cancelled</option>
                                                 {/* Compatibility fallbacks */}
-                                                {!['Confirmed', 'Packed', 'Shipping', 'Delivered', 'Cancelled'].includes(order.status) && (
+                                                {!['Pending', 'Confirmed', 'Processing', 'Packed', 'Shipping', 'Delivered', 'Cancelled'].includes(order.status) && (
                                                     <option value={order.status}>{order.status}</option>
                                                 )}
                                             </select>
@@ -365,7 +367,9 @@ const Orders = () => {
                                     onChange={(e) => handleStatusUpdate(selectedOrder.id, e.target.value)}
                                     className={`w-full px-4 py-3 rounded-xl font-bold border-2 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${getStatusColor(selectedOrder.status)}`}
                                 >
+                                    <option value="Pending">Pending</option>
                                     <option value="Confirmed">Confirmed</option>
+                                    <option value="Processing">Processing</option>
                                     <option value="Packed">Packed</option>
                                     <option value="Shipping">Shipping</option>
                                     <option value="Delivered">Delivered</option>

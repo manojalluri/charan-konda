@@ -23,7 +23,8 @@ const Contact = () => {
             // 1. Save to MongoDB (Record Keeping)
             await api.post('/contact', {
                 name: formData.name,
-                contact: formData.contact,
+                phone: formData.phone,
+                email: formData.email,
                 requirement: formData.requirement
             });
 
@@ -38,7 +39,8 @@ const Contact = () => {
                     templateId,
                     {
                         from_name: formData.name,
-                        from_contact: formData.contact,
+                        from_phone: formData.phone,
+                        from_email: formData.email,
                         message: formData.requirement,
                         to_name: 'Cutora Admin',
                     },
@@ -135,10 +137,20 @@ const Contact = () => {
                                 />
                                 <input
                                     required
-                                    name="contact"
-                                    value={formData.contact}
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone || ''}
                                     onChange={handleChange}
-                                    placeholder="Phone / Email"
+                                    placeholder="Phone Number"
+                                    className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400"
+                                />
+                                <input
+                                    required
+                                    type="email"
+                                    name="email"
+                                    value={formData.email || ''}
+                                    onChange={handleChange}
+                                    placeholder="Email Address"
                                     className="w-full p-3.5 bg-gray-50 rounded-lg border border-gray-200 focus:bg-white focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400"
                                 />
                                 <textarea

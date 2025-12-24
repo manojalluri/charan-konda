@@ -11,6 +11,7 @@ const Login = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phone: '',
         password: ''
     });
 
@@ -34,23 +35,28 @@ const Login = () => {
         setIsLogin(!isLogin);
         setError('');
         setSuccessMsg('');
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', phone: '', password: '' });
     };
 
     const validateForm = () => {
-        const { email, password, name } = formData;
+        const { email, password, name, phone } = formData;
 
-        // Email Regex
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-        if (!email.trim()) return "Email address is required.";
-        if (!emailRegex.test(email.trim())) return "Please enter a valid email address.";
-        if (!password) return "Password is required.";
-
-        if (!isLogin) {
+        if (isLogin) {
+            if (!phone.trim()) return "Phone number is required.";
+            if (phone.trim().length < 10) return "Please enter a valid phone number.";
+        } else {
             if (!name.trim()) return "Full Name is required.";
-            if (password.length < 6) return "Password must be at least 6 characters.";
+            if (!phone.trim()) return "Phone number is required.";
+            if (phone.trim().length < 10) return "Phone number must be at least 10 digits.";
+            // Email is optional but if provided should be valid
+            if (email.trim()) {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(email.trim())) return "Please enter a valid email address.";
+            }
         }
+
+        if (!password) return "Password is required.";
+        if (!isLogin && password.length < 6) return "Password must be at least 6 characters.";
 
         return null; // Valid
     };
@@ -70,13 +76,14 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const { email, password, name } = formData;
+            const { email, password, name, phone } = formData;
             const cleanEmail = email.trim();
             const cleanName = name.trim();
+            const cleanPhone = phone.trim();
 
             if (isLogin) {
-                // Login Flow
-                const result = await loginUser(cleanEmail, password);
+                // Login Flow - cleanPhone is used
+                const result = await loginUser(cleanPhone, password);
                 if (result.success) {
                     setSuccessMsg("Login successful! Redirecting...");
                     setTimeout(() => navigate('/'), 1000);
@@ -85,17 +92,10 @@ const Login = () => {
                 }
             } else {
                 // Register Flow
-                const result = await registerUser(cleanName, cleanEmail, password);
+                const result = await registerUser(cleanName, cleanEmail, cleanPhone, password);
                 if (result.success) {
-                    if (result.message && result.message.includes("confirm")) {
-                        // Email confirmation needed
-                        setSuccessMsg(result.message);
-                        setTimeout(() => toggleMode(), 3000); // Switch to login after showing msg
-                    } else {
-                        // Direct success
-                        setSuccessMsg("Account created successfully! Taking you in...");
-                        setTimeout(() => navigate('/'), 1500);
-                    }
+                    setSuccessMsg("Account created successfully! Taking you in...");
+                    setTimeout(() => navigate('/'), 1500);
                 } else {
                     setError(result.message || "Registration failed. Please try again.");
                 }
@@ -120,7 +120,7 @@ const Login = () => {
                         {isLogin ? 'Welcome Back' : 'Join Us'}
                     </h1>
                     <p className="text-[#93959F] text-sm font-medium mt-1">
-                        {isLogin ? 'Login to order clean cuts' : 'Create account to get started'}
+                        {isLogin ? 'Login to order clean cuts' : 'Create account with phone number'}
                     </p>
                 </div>
 
@@ -161,21 +161,40 @@ const Login = () => {
                     )}
 
                     <div>
-                        <label className="text-xs font-bold text-[#60646C] uppercase mb-1.5 block tracking-wider">Email</label>
+                        <label className="text-xs font-bold text-[#60646C] uppercase mb-1.5 block tracking-wider">Phone Number</label>
                         <div className="relative group">
-                            <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-[#FC8019] transition-colors" size={18} />
+                            <LogIn className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-[#FC8019] transition-colors" size={18} />
                             <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
+                                type="tel"
+                                name="phone"
+                                value={formData.phone}
                                 onChange={handleChange}
                                 className="w-full pl-10 p-3.5 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-[#FC8019] focus:ring-4 focus:ring-orange-500/10 outline-none transition-all placeholder-gray-400 font-medium text-[#1C1C1C]"
-                                placeholder="you@example.com"
+                                placeholder="Enter 10-digit number"
                                 disabled={isLoading}
-                                autoComplete="email"
+                                autoComplete="tel"
                             />
                         </div>
                     </div>
+
+                    {!isLogin && (
+                        <div>
+                            <label className="text-xs font-bold text-[#60646C] uppercase mb-1.5 block tracking-wider">Email (Optional)</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-[#FC8019] transition-colors" size={18} />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full pl-10 p-3.5 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-[#FC8019] focus:ring-4 focus:ring-orange-500/10 outline-none transition-all placeholder-gray-400 font-medium text-[#1C1C1C]"
+                                    placeholder="you@example.com"
+                                    disabled={isLoading}
+                                    autoComplete="email"
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <label className="text-xs font-bold text-[#60646C] uppercase mb-1.5 block tracking-wider">Password</label>

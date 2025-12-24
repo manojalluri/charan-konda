@@ -6,6 +6,21 @@ const ShopContext = createContext();
 
 export const useShop = () => useContext(ShopContext);
 
+const normalizeOrder = (order) => {
+    if (!order) return order;
+    return {
+        ...order,
+        id: order.id || order._id,
+        itemTotal: order.itemTotal ?? order.item_total,
+        deliveryFee: order.deliveryFee ?? order.delivery_fee,
+        taxesAndCharges: order.taxesAndCharges ?? order.taxes_and_charges,
+        finalAmount: order.finalAmount ?? order.final_amount,
+        trackingId: order.trackingId ?? order.tracking_id,
+        courierPartner: order.courierPartner ?? order.courier_partner,
+        userEmail: order.userEmail ?? order.user_email
+    };
+};
+
 export const ShopProvider = ({ children }) => {
     // --- STATE ---
     const [products, setProducts] = useState(initialProducts);
@@ -123,7 +138,7 @@ export const ShopProvider = ({ children }) => {
     const fetchAllOrders = async () => {
         try {
             const data = await api.get('/orders');
-            setOrders(data);
+            setOrders(Array.isArray(data) ? data.map(normalizeOrder) : []);
         } catch (err) {
             console.error('Error fetching all orders:', err);
         }
@@ -132,7 +147,7 @@ export const ShopProvider = ({ children }) => {
     const loadUserOrders = async (email, userId) => {
         try {
             const data = await api.get(`/orders?email=${email}&userId=${userId}`);
-            setOrders(data);
+            setOrders(Array.isArray(data) ? data.map(normalizeOrder) : []);
         } catch (err) {
             console.error('Error loading user orders:', err);
         }
@@ -246,7 +261,8 @@ export const ShopProvider = ({ children }) => {
     const updateOrderStatus = async (orderId, newStatus) => {
         try {
             const data = await api.put(`/orders/${orderId}`, { status: newStatus });
-            setOrders(prev => prev.map(order => order.id === orderId ? { ...order, status: data.status } : order));
+            const normalized = normalizeOrder(data);
+            setOrders(prev => prev.map(order => order.id === orderId ? { ...order, ...normalized } : order));
             return { success: true };
         } catch (err) {
             console.error('Error updating order status:', err);
@@ -260,10 +276,11 @@ export const ShopProvider = ({ children }) => {
                 tracking_id: trackingData.trackingId,
                 courier_partner: trackingData.courierPartner
             });
-            setOrders(prev => prev.map(order => order.id === orderId ? { ...order, ...data } : order));
+            const normalized = normalizeOrder(data);
+            setOrders(prev => prev.map(order => order.id === orderId ? { ...order, ...normalized } : order));
             return { success: true };
         } catch (err) {
-            console.error('Error updating tracking:', err);
+            console.error('Error updating order tracking:', err);
             return { success: false };
         }
     };
@@ -278,9 +295,13 @@ export const ShopProvider = ({ children }) => {
         }
     };
 
-    const loginUser = async (email, password) => {
+    const loginUser = async (phoneOrEmail, password) => {
         try {
-            const data = await api.post('/auth/login', { email, password });
+            // Check if it looks like an email or phone
+            const isEmail = phoneOrEmail.includes('@');
+            const loginData = isEmail ? { email: phoneOrEmail, password } : { phone: phoneOrEmail, password };
+
+            const data = await api.post('/auth/login', loginData);
             localStorage.setItem('cutora-auth-token', data.token);
             localStorage.setItem('cutora-user', JSON.stringify(data.user));
             setUser(data.user);
@@ -301,16 +322,16 @@ export const ShopProvider = ({ children }) => {
         }
     };
 
-    const registerUser = async (name, email, password) => {
+    const registerUser = async (name, email, phone, password) => {
         try {
-            const data = await api.post('/auth/register', { name, email, password });
+            const data = await api.post('/auth/register', { name, email, phone, password });
             localStorage.setItem('cutora-auth-token', data.token);
             localStorage.setItem('cutora-user', JSON.stringify(data.user));
             setUser(data.user);
             return { success: true };
         } catch (err) {
             console.error('Registration error:', err);
-            return { success: false, message: 'Registration failed' };
+            return { success: false, message: 'Registration failed. ' + (err.message || '') };
         }
     };
 

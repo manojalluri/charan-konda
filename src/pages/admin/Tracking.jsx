@@ -100,9 +100,11 @@ const Tracking = () => {
                         >
                             <option value="All">All Statuses</option>
                             <option value="Confirmed">Confirmed</option>
+                            <option value="Processing">Processing</option>
                             <option value="Packed">Packed</option>
                             <option value="Shipping">Shipping</option>
                             <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                     </div>
