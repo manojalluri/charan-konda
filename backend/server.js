@@ -183,6 +183,15 @@ app.put('/api/orders/:id', async (req, res) => {
     }
 });
 
+app.delete('/api/orders/:id', async (req, res) => {
+    try {
+        await Order.findOneAndDelete({ id: req.params.id });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // --- CONTACT ROUTES ---
 app.get('/api/contact', async (req, res) => {
     try {

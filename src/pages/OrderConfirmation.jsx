@@ -49,10 +49,12 @@ const OrderConfirmation = () => {
                         <CheckCircle size={48} />
                     </div>
                     <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Order Confirmed!</h1>
+                    <div className="inline-block px-4 py-1.5 bg-orange-50 text-[#FC8019] rounded-full text-sm font-bold mb-4 border border-orange-100">
+                        Order ID: #{order.id}
+                    </div>
                     <p className="text-gray-500 text-lg max-w-md mx-auto">
-                        Thank you for your purchase. Your order has been placed successfully.
+                        Thank you for your purchase. Your order has been placed successfully and you can track your order using the order ID.
                     </p>
-
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -141,6 +143,14 @@ const OrderConfirmation = () => {
                                 We have received your order. We will call you to confirm delivery timing.
                             </p>
 
+
+                            <button
+                                onClick={() => navigate('/track-order')}
+                                className="w-full px-6 py-3 bg-[#FC8019] text-white rounded-xl hover:bg-[#E26E0F] transition-all font-bold flex items-center justify-center gap-2 mb-3 shadow-md active:scale-95"
+                            >
+                                <Package size={18} />
+                                Track Your Order
+                            </button>
 
                             <button
                                 onClick={() => navigate('/')}

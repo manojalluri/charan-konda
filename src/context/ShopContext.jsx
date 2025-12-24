@@ -285,6 +285,17 @@ export const ShopProvider = ({ children }) => {
         }
     };
 
+    const deleteOrder = async (orderId) => {
+        try {
+            await api.delete(`/orders/${orderId}`);
+            setOrders(prev => prev.filter(order => order.id !== orderId));
+            return { success: true };
+        } catch (err) {
+            console.error('Error deleting order:', err);
+            return { success: false };
+        }
+    };
+
     const updateSiteConfig = async (newConfig) => {
         try {
             const updatedConfig = { ...siteConfig, ...newConfig };
@@ -392,6 +403,7 @@ export const ShopProvider = ({ children }) => {
             getProductPrice,
             updateOrderStatus,
             updateOrderTracking,
+            deleteOrder,
             fetchProducts,
             fetchAllOrders,
             calculateDeliveryFee,

@@ -38,7 +38,7 @@ const ProductCard = ({ product }) => {
             className="bg-white rounded-3xl shadow-card border border-gray-100 overflow-hidden hover:shadow-float transition-all duration-300 group flex flex-col h-full relative cursor-pointer"
         >
             {/* Image Area */}
-            <Link to={`/product/${product._id || product.id}`} className="relative h-56 overflow-hidden block">
+            <Link to={`/product/${product._id || product.id}`} className="relative h-44 overflow-hidden block">
                 <img
                     src={product.image}
                     alt={product.name}
@@ -57,7 +57,7 @@ const ProductCard = ({ product }) => {
             </Link>
 
             {/* Content */}
-            <div className="p-5 flex flex-col flex-grow">
+            <div className="p-4 flex flex-col flex-grow">
                 {isExpanded && (
                     <div className="flex justify-between items-start mb-2">
                         <div className="px-2 py-0.5 bg-[#2ECC71]/10 rounded border border-[#2ECC71]/20 text-[10px] font-extrabold uppercase text-[#2ECC71] tracking-wider">{product.category}</div>
@@ -67,13 +67,13 @@ const ProductCard = ({ product }) => {
                     </div>
                 )}
 
-                <Link to={`/product/${product._id || product.id}`} className="block mb-2" onClick={(e) => e.stopPropagation()}>
-                    <h3 className="text-[#1C1C1C] font-extrabold text-lg leading-snug group-hover:text-[#FC8019] transition-colors line-clamp-2 tracking-tight">
+                <Link to={`/product/${product._id || product.id}`} className="block mb-1.5" onClick={(e) => e.stopPropagation()}>
+                    <h3 className="text-[#1C1C1C] font-extrabold text-base leading-snug group-hover:text-[#FC8019] transition-colors line-clamp-2 tracking-tight">
                         {product.name}
                     </h3>
                 </Link>
 
-                <p className="text-[#93959F] text-xs mb-5 line-clamp-2 font-medium leading-relaxed">
+                <p className="text-[#93959F] text-[11px] mb-4 line-clamp-2 font-medium leading-relaxed">
                     {product.description}
                 </p>
 

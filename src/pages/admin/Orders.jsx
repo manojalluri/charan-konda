@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Filter, Eye, ChevronDown, Package, RefreshCcw } from 'lucide-react';
+import { Search, Filter, Eye, ChevronDown, Package, RefreshCcw, Trash2 } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
 const Orders = () => {
-    const { orders, updateOrderStatus, fetchAllOrders } = useShop();
+    const { orders, updateOrderStatus, fetchAllOrders, deleteOrder } = useShop();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -75,6 +75,20 @@ const Orders = () => {
                     ...prevOrder,
                     status: newStatus
                 }));
+            }
+        }
+    };
+
+    const handleDeleteOrder = async (orderId) => {
+        if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+            const result = await deleteOrder(orderId);
+            if (result.success) {
+                // If the details modal is open for this order, close it
+                if (selectedOrder && selectedOrder.id === orderId) {
+                    setSelectedOrder(null);
+                }
+            } else {
+                alert('Failed to delete order. Please try again.');
             }
         }
     };
@@ -217,13 +231,20 @@ const Orders = () => {
                                                 )}
                                             </select>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                                             <button
                                                 onClick={() => setSelectedOrder(order)}
                                                 className="inline-flex items-center px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors text-sm font-medium"
                                             >
                                                 <Eye className="w-4 h-4 mr-1" />
                                                 View
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteOrder(order.id)}
+                                                className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
+                                                title="Delete Order"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </td>
                                     </tr>
@@ -259,12 +280,20 @@ const Orders = () => {
                                                 {order.items.length} items • ₹{order.finalAmount || order.final_amount || 0}
                                             </p>
                                         </div>
-                                        <button
-                                            onClick={() => setSelectedOrder(order)}
-                                            className="text-orange-600 font-bold text-xs uppercase tracking-wider bg-orange-50 px-3 py-1.5 rounded-lg"
-                                        >
-                                            Details
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setSelectedOrder(order)}
+                                                className="text-orange-600 font-bold text-xs uppercase tracking-wider bg-orange-50 px-3 py-1.5 rounded-lg"
+                                            >
+                                                Details
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteOrder(order.id)}
+                                                className="text-red-600 font-bold text-xs uppercase tracking-wider bg-red-50 px-3 py-1.5 rounded-lg"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -378,12 +407,19 @@ const Orders = () => {
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-gray-200 flex justify-end">
+                        <div className="p-6 border-t border-gray-200 flex justify-between items-center bg-gray-50 rounded-b-lg">
+                            <button
+                                onClick={() => handleDeleteOrder(selectedOrder.id)}
+                                className="flex items-center gap-2 px-4 py-2 border-2 border-red-100 text-red-600 rounded-lg hover:bg-red-50 font-bold transition-colors"
+                            >
+                                <Trash2 size={18} />
+                                DELETE ORDER
+                            </button>
                             <button
                                 onClick={() => setSelectedOrder(null)}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-bold transition-all"
                             >
-                                Close
+                                CLOSE
                             </button>
                         </div>
                     </div>
