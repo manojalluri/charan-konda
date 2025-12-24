@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { products as initialProducts } from '../data/mockData';
+
 import { api } from '../lib/api';
 
 const ShopContext = createContext();
@@ -23,9 +23,10 @@ const normalizeOrder = (order) => {
 
 export const ShopProvider = ({ children }) => {
     // --- STATE ---
-    const [products, setProducts] = useState(initialProducts);
+    const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [users, setUsers] = useState([]);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isProductsLoading, setIsProductsLoading] = useState(true);
     const [user, setUser] = useState(null);
@@ -37,7 +38,7 @@ export const ShopProvider = ({ children }) => {
         logo: "/logo.png",
         brandName: "CUTORA FRESH",
         heroImage: "/hero.png",
-        heroTitle: "Fresh Meats. Clean Cut. Delivered Daily.",
+        heroTitle: "Fresh Meat. Clean Cut. Delivered Daily.",
         heroSubtitle: "Hygienically sourced and processed premium meats & seafood.",
         deliveryCharge: 40,
         freeDeliveryAbove: 1000,
@@ -57,44 +58,83 @@ export const ShopProvider = ({ children }) => {
 
     const [storeSettings, setStoreSettings] = useState(defaultStoreSettings);
 
+    const fetchAllData = async (currentUser = null) => {
+        const activeUser = currentUser || user;
+
+        await Promise.all([
+            fetchProducts(),
+            fetchSettings()
+        ]);
+
+        if (activeUser) {
+            if (activeUser.role === 'admin' || activeUser.role === 'owner') {
+                fetchAllOrders();
+                fetchUsers();
+            } else {
+                loadUserOrders(activeUser.email, activeUser.id || activeUser._id);
+            }
+        }
+    };
+
     // --- INITIALIZATION ---
     useEffect(() => {
         const init = async () => {
-            // Load local data synchronously
-            const savedCart = localStorage.getItem('cutora-cart');
+            // 1. Load local data synchronously
+            const savedCart = localStorage.getItem('cutora-cart-v2');
             if (savedCart) setCart(JSON.parse(savedCart));
 
-            const savedAuth = localStorage.getItem('cutora-user');
+            // 2. Load Safety Net (Cached Real Data)
+            const cachedConfig = localStorage.getItem('cutora-config-v2');
+            if (cachedConfig) setSiteConfig(JSON.parse(cachedConfig));
+
+            const cachedSettings = localStorage.getItem('cutora-store-settings-v2');
+            if (cachedSettings) setStoreSettings(JSON.parse(cachedSettings));
+
+            const cachedProducts = localStorage.getItem('cutora-products-v2');
+            if (cachedProducts) setProducts(JSON.parse(cachedProducts));
+
+            let initialUser = null;
+            const savedAuth = localStorage.getItem('cutora-user-v2');
             if (savedAuth) {
-                const parsed = JSON.parse(savedAuth);
-                setUser(parsed);
-                setIsAdmin(parsed.role === 'admin' || parsed.role === 'owner');
-                setIsOwner(parsed.role === 'owner');
+                initialUser = JSON.parse(savedAuth);
+                setUser(initialUser);
+                setIsAdmin(initialUser.role === 'admin' || initialUser.role === 'owner');
+                setIsOwner(initialUser.role === 'owner');
             }
 
             // Mark auth as ready so UI can mount
             setIsLoadingAuth(false);
 
-            // Fetch heavy data in background
-            fetchAllData();
+            // Fetch fresh heavy data in background
+            fetchAllData(initialUser);
         };
         init();
     }, []);
 
-    // --- PERSISTENCE ---
+    // --- PERSISTENCE (Auto-save Cache) ---
     useEffect(() => {
-        localStorage.setItem('cutora-cart', JSON.stringify(cart));
+        localStorage.setItem('cutora-cart-v2', JSON.stringify(cart));
     }, [cart]);
 
-    // --- ACTIONS ---
+    useEffect(() => {
+        // Always update cache to reflect the current state of DB
+        localStorage.setItem('cutora-products-v2', JSON.stringify(products));
+    }, [products]);
 
+    useEffect(() => {
+        localStorage.setItem('cutora-config-v2', JSON.stringify(siteConfig));
+    }, [siteConfig]);
+
+    useEffect(() => {
+        localStorage.setItem('cutora-store-settings-v2', JSON.stringify(storeSettings));
+    }, [storeSettings]);
+
+    // --- ACTIONS ---
     const fetchProducts = async (background = false) => {
         if (!background) setIsProductsLoading(true);
         try {
             const data = await api.get('/products');
-            if (data && data.length > 0) {
-                setProducts(data);
-            }
+            setProducts(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error fetching products:', err);
         } finally {
@@ -131,18 +171,23 @@ export const ShopProvider = ({ children }) => {
         }
     };
 
-    const fetchAllData = async () => {
-        await Promise.all([
-            fetchProducts(),
-            fetchSettings()
-        ]);
+    const fetchUsers = async () => {
+        try {
+            const data = await api.get('/users');
+            setUsers(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Error fetching users:', err);
+        }
+    };
 
-        if (user) {
-            if (user.role === 'admin' || user.role === 'owner') {
-                fetchAllOrders();
-            } else {
-                loadUserOrders(user.email, user.id || user._id);
-            }
+    const deleteUser = async (userId) => {
+        try {
+            await api.delete(`/users/${userId}`);
+            setUsers(prev => prev.filter(u => u._id !== userId && u.id !== userId));
+            return { success: true };
+        } catch (err) {
+            console.error('Error deleting user:', err);
+            return { success: false, message: err.message };
         }
     };
 
@@ -194,9 +239,10 @@ export const ShopProvider = ({ children }) => {
                 payment_status: orderData.paymentStatus || 'Pending'
             };
             const data = await api.post('/orders', formattedOrder);
-            setOrders(prev => [data, ...prev]);
+            const normalized = normalizeOrder(data);
+            setOrders(prev => [normalized, ...prev]);
             clearCart();
-            return data.id;
+            return normalized.id;
         } catch (err) {
             console.error('Error placing order:', err);
             throw err;
@@ -266,7 +312,7 @@ export const ShopProvider = ({ children }) => {
     const deleteOrder = async (orderId) => {
         try {
             await api.delete(`/orders/${orderId}`);
-            setOrders(prev => prev.filter(o => o.id !== orderId));
+            setOrders(prev => prev.filter(o => o.id !== orderId && o._id !== orderId));
             return { success: true };
         } catch (err) {
             console.error('Error deleting order:', err);
@@ -292,7 +338,7 @@ export const ShopProvider = ({ children }) => {
 
             const data = await api.post('/auth/login', loginData);
             localStorage.setItem('cutora-auth-token', data.token);
-            localStorage.setItem('cutora-user', JSON.stringify(data.user));
+            localStorage.setItem('cutora-user-v2', JSON.stringify(data.user));
             setUser(data.user);
             setIsAdmin(data.user.role === 'admin' || data.user.role === 'owner');
             setIsOwner(data.user.role === 'owner');
@@ -315,7 +361,7 @@ export const ShopProvider = ({ children }) => {
         try {
             const data = await api.post('/auth/register', { name, email, phone, password });
             localStorage.setItem('cutora-auth-token', data.token);
-            localStorage.setItem('cutora-user', JSON.stringify(data.user));
+            localStorage.setItem('cutora-user-v2', JSON.stringify(data.user));
             setUser(data.user);
             return { success: true };
         } catch (err) {
@@ -326,7 +372,7 @@ export const ShopProvider = ({ children }) => {
 
     const logoutUser = () => {
         localStorage.removeItem('cutora-auth-token');
-        localStorage.removeItem('cutora-user');
+        localStorage.removeItem('cutora-user-v2');
         setUser(null);
         setIsAdmin(false);
         setIsOwner(false);
@@ -359,6 +405,7 @@ export const ShopProvider = ({ children }) => {
             products,
             cart,
             orders,
+            users,
             isAdmin,
             isOwner,
             siteConfig,
@@ -384,6 +431,8 @@ export const ShopProvider = ({ children }) => {
             deleteOrder,
             fetchProducts,
             fetchAllOrders,
+            fetchUsers,
+            deleteUser,
             calculateDeliveryFee,
             calculateTax
         }}>

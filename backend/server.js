@@ -205,6 +205,28 @@ app.delete('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
     }
 });
 
+// --- USER MANAGEMENT ROUTES ---
+app.get('/api/users', authenticate, adminOnly, async (req, res) => {
+    try {
+        const users = await User.find({ role: 'user' }).select('-password').sort({ created_at: -1 }).lean();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.delete('/api/users/:id', authenticate, adminOnly, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await User.findByIdAndDelete(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        // Optional: Delete user's orders too? User usually wants to keep history but let's just delete the user for now as requested.
+        res.json({ success: true, message: 'User deleted' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // --- CONTACT ROUTES ---
 app.get('/api/contact', authenticate, adminOnly, async (req, res) => {
     try {

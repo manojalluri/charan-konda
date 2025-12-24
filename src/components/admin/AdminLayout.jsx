@@ -21,7 +21,7 @@ import {
 import { useShop } from '../../context/ShopContext';
 
 const AdminLayout = ({ children }) => {
-    const { logoutUser } = useShop();
+    const { user, logoutUser } = useShop();
     const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -126,11 +126,13 @@ const AdminLayout = ({ children }) => {
                                 className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                             >
                                 <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
-                                    <span className="text-white text-sm font-semibold">AD</span>
+                                    <span className="text-white text-sm font-semibold">
+                                        {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'AD'}
+                                    </span>
                                 </div>
                                 <div className="hidden md:block text-left">
-                                    <p className="text-sm font-medium text-gray-700">Admin User</p>
-                                    <p className="text-xs text-gray-500">Super Admin</p>
+                                    <p className="text-sm font-medium text-gray-700">{user?.name || 'Admin User'}</p>
+                                    <p className="text-xs text-gray-500 capitalize">{user?.role || 'Super Admin'}</p>
                                 </div>
                                 <ChevronDown className="w-4 h-4 text-gray-500" />
                             </button>

@@ -22,18 +22,11 @@ const Home = () => {
             {/* Hero Section */}
             {/* Hero Section */}
             <section className="relative h-[70vh] flex items-center justify-center overflow-hidden bg-[#1C1C1C]">
-                <div className="absolute inset-0">
-                    <img
-                        src={siteConfig.heroImage || "/hero.png"}
-                        alt="Hero"
-                        fetchpriority="high"
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1C] via-[#1C1C1C]/40 to-transparent"></div>
-                </div>
+                <div className="absolute inset-0 bg-[#1C1C1C]"></div>
 
                 <FadeIn className="relative z-10 text-center max-w-5xl px-4 mt-16">
-                    <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl tracking-tight leading-none" dangerouslySetInnerHTML={{ __html: siteConfig.heroTitle }}>
+                    <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl tracking-tight leading-none">
+                        {siteConfig.heroTitle}
                     </h1>
                     <p className="text-gray-200 text-lg md:text-2xl mb-10 font-medium tracking-wide max-w-3xl mx-auto drop-shadow-md">
                         {siteConfig.heroSubtitle}

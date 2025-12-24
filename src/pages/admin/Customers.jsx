@@ -1,18 +1,68 @@
 import React, { useState } from 'react';
-import { Search, Filter, Eye, Mail, Phone, MapPin, ShoppingBag, DollarSign, Users } from 'lucide-react';
+import { Search, Filter, Eye, Mail, Phone, MapPin, ShoppingBag, DollarSign, Users, RefreshCcw, Trash2 } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
 const Customers = () => {
-    const { orders } = useShop();
+    const { orders, users, deleteUser, fetchUsers, fetchAllOrders } = useShop();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Derive unique customers from orders
-    const customerMap = orders.reduce((acc, order) => {
-        const key = order.customer?.phone || order.userEmail || 'Guest';
-        if (!acc[key]) {
-            acc[key] = {
+    useEffect(() => {
+        if (fetchUsers) fetchUsers();
+        if (fetchAllOrders) fetchAllOrders();
+    }, []);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await Promise.all([fetchUsers?.(), fetchAllOrders?.()]);
+        setTimeout(() => setIsRefreshing(false), 500);
+    };
+
+    const handleDeleteCustomer = async (customer) => {
+        // We can only delete registered users (those with a MongoDB _id)
+        const userId = customer.dbId;
+        if (!userId) {
+            alert("Guest customers cannot be deleted as accounts. You must delete their orders in the Repairs/Orders module instead.");
+            return;
+        }
+
+        if (window.confirm(`Are you sure you want to delete the account for ${customer.name}? This will permanently remove their access but keep their order history for your records.`)) {
+            const result = await deleteUser(userId);
+            if (result.success) {
+                if (selectedCustomer && selectedCustomer.dbId === userId) setSelectedCustomer(null);
+            } else {
+                alert(`Failed to delete user: ${result.message}`);
+            }
+        }
+    };
+
+    // 1. Start with Registered Users from DB
+    const customerMap = users.reduce((acc, u) => {
+        acc[u.phone || u.email || u._id] = {
+            id: u._id,
+            dbId: u._id,
+            name: u.name,
+            email: u.email || 'N/A',
+            phone: u.phone || 'N/A',
+            address: 'Registered User',
+            totalOrders: 0,
+            totalSpend: 0,
+            lastOrder: 'N/A',
+            status: 'Registered',
+            orders: []
+        };
+        return acc;
+    }, {});
+
+    // 2. Add/Update with Order Data (includes Guests)
+    orders.forEach(order => {
+        const key = order.customer?.phone || order.userEmail || order.user_id || 'Guest';
+
+        if (!customerMap[key]) {
+            customerMap[key] = {
                 id: key,
+                dbId: null, // Guests don't have a user record to delete
                 name: order.customer?.name || 'Guest Customer',
                 email: order.userEmail || order.customer?.email || 'N/A',
                 phone: order.customer?.phone || 'N/A',
@@ -20,24 +70,26 @@ const Customers = () => {
                 totalOrders: 0,
                 totalSpend: 0,
                 lastOrder: order.date,
-                status: 'Active',
+                status: 'Guest',
                 orders: []
             };
         }
-        acc[key].totalOrders += 1;
-        acc[key].totalSpend += (order.finalAmount || 0);
-        acc[key].orders.push({
+
+        const customer = customerMap[key];
+        customer.totalOrders += 1;
+        customer.totalSpend += (order.finalAmount || 0);
+        customer.orders.push({
             id: order.id,
             date: new Date(order.date).toLocaleDateString(),
             items: order.items.map(i => i.name).join(', '),
             total: order.finalAmount,
             status: order.status
         });
-        if (new Date(order.date) > new Date(acc[key].lastOrder)) {
-            acc[key].lastOrder = order.date;
+
+        if (customer.lastOrder === 'N/A' || new Date(order.date) > new Date(customer.lastOrder)) {
+            customer.lastOrder = order.date;
         }
-        return acc;
-    }, {});
+    });
 
     const customersList = Object.values(customerMap).filter(customer =>
         customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -50,9 +102,18 @@ const Customers = () => {
     return (
         <div className="p-6">
             {/* Header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-                <p className="text-gray-500 mt-1">Manage your customer base</p>
+            <div className="mb-6 flex justify-between items-end">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+                    <p className="text-gray-500 mt-1">Manage and track your customer base ({customersList.length} total)</p>
+                </div>
+                <button
+                    onClick={handleRefresh}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+                >
+                    <RefreshCcw size={16} className={isRefreshing ? "animate-spin" : ""} />
+                    Refresh
+                </button>
             </div>
 
             {/* Stats */}
@@ -83,7 +144,7 @@ const Customers = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-500 font-medium">Total Revenue</p>
-                            <p className="text-2xl font-bold text-gray-900 mt-1">₹{totalRevenue.toLocaleString()}</p>
+                            <p className="text-2xl font-bold text-gray-900 mt-1">₹{Object.values(customerMap).reduce((sum, c) => sum + (c.totalSpend || 0), 0).toLocaleString()}</p>
                         </div>
                         <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
                             <DollarSign className="w-6 h-6 text-orange-600" />
@@ -143,15 +204,26 @@ const Customers = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{customer.totalOrders}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-gray-900">₹{customer.totalSpend.toLocaleString()}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{new Date(customer.lastOrder).toLocaleDateString()}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        {customer.lastOrder === 'N/A' ? 'Never' : new Date(customer.lastOrder).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                                         <button
                                             onClick={() => setSelectedCustomer(customer)}
                                             className="inline-flex items-center px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-600 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
                                         >
                                             <Eye className="w-4 h-4 mr-1" />
-                                            View Profile
+                                            View
                                         </button>
+                                        {customer.dbId && (
+                                            <button
+                                                onClick={() => handleDeleteCustomer(customer)}
+                                                className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all text-xs font-bold uppercase tracking-wider"
+                                                title="Delete Account"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -174,12 +246,22 @@ const Customers = () => {
                                         <p className="text-[10px] text-orange-600 font-bold mt-1 uppercase">₹{customer.totalSpend.toLocaleString()} • {customer.totalOrders} Orders</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedCustomer(customer)}
-                                    className="p-2 bg-orange-50 text-orange-600 rounded-full"
-                                >
-                                    <Eye className="w-5 h-5" />
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setSelectedCustomer(customer)}
+                                        className="p-2 bg-orange-50 text-orange-600 rounded-full"
+                                    >
+                                        <Eye className="w-5 h-5" />
+                                    </button>
+                                    {customer.dbId && (
+                                        <button
+                                            onClick={() => handleDeleteCustomer(customer)}
+                                            className="p-2 bg-red-50 text-red-600 rounded-full"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -285,12 +367,21 @@ const Customers = () => {
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-gray-200 flex justify-end">
+                        <div className="p-6 border-t border-gray-200 flex justify-between items-center bg-gray-50 rounded-b-lg">
+                            {selectedCustomer.dbId && (
+                                <button
+                                    onClick={() => handleDeleteCustomer(selectedCustomer)}
+                                    className="flex items-center gap-2 px-4 py-2 border-2 border-red-100 text-red-600 rounded-lg hover:bg-red-50 font-bold transition-colors text-sm"
+                                >
+                                    <Trash2 size={18} />
+                                    DELETE ACCOUNT
+                                </button>
+                            )}
                             <button
                                 onClick={() => setSelectedCustomer(null)}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                className={`px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-bold transition-all ${!selectedCustomer.dbId ? 'w-full' : ''}`}
                             >
-                                Close
+                                CLOSE
                             </button>
                         </div>
                     </div>
