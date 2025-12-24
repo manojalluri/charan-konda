@@ -1,5 +1,11 @@
 const getBaseUrl = () => {
-    let url = import.meta.env.VITE_API_BASE_URL || '/api';
+    let url = import.meta.env.VITE_API_BASE_URL;
+
+    // If mission-critical variable is missing, use the known production URL as a safety net
+    if (!url || url === '/api') {
+        url = 'https://charan-konda.onrender.com/api';
+    }
+
     // Ensure URL doesn't have double slashes if it ends with /
     if (url.endsWith('/')) url = url.slice(0, -1);
     return url;
