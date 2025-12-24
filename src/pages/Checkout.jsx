@@ -98,9 +98,11 @@ const Checkout = () => {
             navigate(`/order-confirmation/${orderId}`);
 
         } catch (error) {
-            console.error("Order placement failed:", error);
+            console.error("Order placement failed. Details:", error);
+            if (error.message) console.error("Error Message:", error.message);
+            // Alert user with specific error if available, often returned by API text
+            alert(`Failed to place order. Server said: ${error.message || 'Unknown error'}`);
             setIsSubmitting(false);
-            alert("Failed to place order. Please try again.");
         }
     };
 
