@@ -186,9 +186,19 @@ export const ShopProvider = ({ children }) => {
     const placeOrder = async (orderData) => {
         try {
             const formattedOrder = {
-                ...orderData,
+                id: orderData.id,
                 user_id: user?.id || user?._id || 'guest',
-                user_email: user?.email || orderData.customer.email
+                user_email: user?.email || orderData.customer.email || orderData.userEmail || 'guest@example.com',
+                date: orderData.date,
+                status: orderData.status || 'Pending',
+                items: orderData.items,
+                customer: orderData.customer,
+                item_total: orderData.itemTotal,
+                delivery_fee: orderData.deliveryFee || 0,
+                taxes_and_charges: orderData.taxesAndCharges || 0,
+                final_amount: orderData.finalAmount,
+                payment_method: orderData.paymentMethod || 'COD',
+                payment_status: orderData.paymentStatus || 'Pending'
             };
             const data = await api.post('/orders', formattedOrder);
             setOrders(prev => [data, ...prev]);
