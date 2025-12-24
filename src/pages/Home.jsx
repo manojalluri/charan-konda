@@ -83,7 +83,7 @@ const Home = () => {
                         {categories.map((cat, idx) => (
                             <FadeIn key={idx} delay={idx * 0.1}>
                                 <Link to={cat.link} className="group block relative rounded-3xl overflow-hidden aspect-[4/3] shadow-card hover:shadow-float transition-all">
-                                    <img src={cat.img} alt={cat.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <img src={cat.img} alt={cat.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 to-transparent flex items-end p-4 md:p-8">
                                         <h3 className="text-white text-lg md:text-2xl font-extrabold tracking-wide uppercase">{cat.title}</h3>
                                     </div>
