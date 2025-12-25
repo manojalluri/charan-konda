@@ -1,4 +1,5 @@
 const express = require('express');
+// Server configuration for Cutora Fresh v2.0
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
