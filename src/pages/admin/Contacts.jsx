@@ -45,6 +45,8 @@ const Contacts = () => {
         !searchQuery ||
         contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         contact.contact?.includes(searchQuery) ||
+        contact.phone?.includes(searchQuery) ||
+        contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         contact.requirement?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -123,17 +125,24 @@ const Contacts = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center text-sm text-gray-700">
-                                                {contact.contact?.includes('@') ? (
-                                                    <>
-                                                        <Mail size={14} className="mr-2 text-gray-400" />
-                                                        {contact.contact}
-                                                    </>
-                                                ) : (
-                                                    <>
+                                            <div className="flex flex-col gap-1">
+                                                {contact.phone && (
+                                                    <div className="flex items-center text-sm text-gray-700">
                                                         <Phone size={14} className="mr-2 text-gray-400" />
+                                                        {contact.phone}
+                                                    </div>
+                                                )}
+                                                {contact.email && (
+                                                    <div className="flex items-center text-sm text-gray-700">
+                                                        <Mail size={14} className="mr-2 text-gray-400" />
+                                                        {contact.email}
+                                                    </div>
+                                                )}
+                                                {!contact.phone && !contact.email && contact.contact && (
+                                                    <div className="flex items-center text-sm text-gray-700">
+                                                        {contact.contact.includes('@') ? <Mail size={14} className="mr-2 text-gray-400" /> : <Phone size={14} className="mr-2 text-gray-400" />}
                                                         {contact.contact}
-                                                    </>
+                                                    </div>
                                                 )}
                                             </div>
                                         </td>
@@ -160,18 +169,25 @@ const Contacts = () => {
                                             <p className="text-xs text-gray-500">{formatDate(contact.created_at)}</p>
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center text-sm text-gray-700">
-                                            {contact.contact?.includes('@') ? (
-                                                <>
-                                                    <Mail size={14} className="mr-2 text-gray-400" />
-                                                    {contact.contact}
-                                                </>
-                                            ) : (
-                                                <>
+                                    <div className="space-y-2 mt-2">
+                                        <div className="flex flex-col gap-2">
+                                            {contact.phone && (
+                                                <div className="flex items-center text-sm text-gray-700">
                                                     <Phone size={14} className="mr-2 text-gray-400" />
+                                                    {contact.phone}
+                                                </div>
+                                            )}
+                                            {contact.email && (
+                                                <div className="flex items-center text-sm text-gray-700">
+                                                    <Mail size={14} className="mr-2 text-gray-400" />
+                                                    {contact.email}
+                                                </div>
+                                            )}
+                                            {!contact.phone && !contact.email && contact.contact && (
+                                                <div className="flex items-center text-sm text-gray-700">
+                                                    {contact.contact.includes('@') ? <Mail size={14} className="mr-2 text-gray-400" /> : <Phone size={14} className="mr-2 text-gray-400" />}
                                                     {contact.contact}
-                                                </>
+                                                </div>
                                             )}
                                         </div>
                                         <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
