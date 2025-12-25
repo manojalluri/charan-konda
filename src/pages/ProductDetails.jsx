@@ -21,6 +21,28 @@ const ProductDetails = () => {
     const [customWeight, setCustomWeight] = useState(250);
     const [quantity, setQuantity] = useState(1); // Number of units (e.g., 2 units of 250g)
 
+    // Get quantity config
+    const defaultQuantityConfig = {
+        "250g": true,
+        "500g": true,
+        "1kg": true,
+        "custom": true,
+        customMin: 250,
+        customMax: 1000000,
+        customStep: 50
+    };
+    const quantityConfig = product?.quantityConfig || defaultQuantityConfig;
+
+    // Set initial valid quantity type
+    useEffect(() => {
+        if (product && !quantityConfig[quantityType]) {
+            if (quantityConfig["1kg"]) setQuantityType("1kg");
+            else if (quantityConfig["500g"]) setQuantityType("500g");
+            else if (quantityConfig["250g"]) setQuantityType("250g");
+            else if (quantityConfig["custom"]) setQuantityType("custom");
+        }
+    }, [product, quantityConfig, quantityType]);
+
     // Auto-select custom when weight > 1kg
     useEffect(() => {
         // Find configuration for the product
@@ -51,18 +73,7 @@ const ProductDetails = () => {
         }
     }, [quantity, quantityType, product]);
 
-    // Get default quantity config if not set
-    const defaultQuantityConfig = {
-        "250g": true,
-        "500g": true,
-        "1kg": true,
-        "custom": true,
-        customMin: 250,
-        customMax: 1000000, // Effectively no limit (1000kg)
-        customStep: 50
-    };
 
-    const quantityConfig = product?.quantityConfig || defaultQuantityConfig;
 
     if (!product) {
         return <div className="min-h-screen grid place-items-center">Product not found</div>;
@@ -207,7 +218,7 @@ const ProductDetails = () => {
                             <label className="text-xs font-extrabold text-[#93959F] uppercase tracking-widest">SELECT QUANTITY</label>
                             <div className="grid grid-cols-2 gap-3">
                                 {/* 250g Option */}
-                                {quantityConfig["250g"] ? (
+                                {quantityConfig["250g"] && (
                                     <button
                                         onClick={() => setQuantityType('250g')}
                                         className={`p-4 rounded-xl border-2 text-left transition-all ${quantityType === '250g'
@@ -220,15 +231,10 @@ const ProductDetails = () => {
                                             <span className={`text-sm font-bold ${quantityType === '250g' ? 'text-[#FC8019]' : 'text-[#60646C]'}`}>₹{Math.round(currentPrice * 0.25)}</span>
                                         </div>
                                     </button>
-                                ) : (
-                                    <div className="p-4 rounded-xl border-2 border-gray-200 bg-gray-50 text-left opacity-60">
-                                        <div className="text-lg font-bold text-gray-400">250g</div>
-                                        <div className="text-[10px] text-red-500 font-bold uppercase">Unavailable</div>
-                                    </div>
                                 )}
 
                                 {/* 500g Option */}
-                                {quantityConfig["500g"] ? (
+                                {quantityConfig["500g"] && (
                                     <button
                                         onClick={() => setQuantityType('500g')}
                                         className={`p-4 rounded-xl border-2 text-left transition-all ${quantityType === '500g'
@@ -241,15 +247,10 @@ const ProductDetails = () => {
                                             <span className={`text-sm font-bold ${quantityType === '500g' ? 'text-[#FC8019]' : 'text-[#60646C]'}`}>₹{Math.round(currentPrice * 0.5)}</span>
                                         </div>
                                     </button>
-                                ) : (
-                                    <div className="p-4 rounded-xl border-2 border-gray-200 bg-gray-50 text-left opacity-60">
-                                        <div className="text-lg font-bold text-gray-400">500g</div>
-                                        <div className="text-[10px] text-red-500 font-bold uppercase">Unavailable</div>
-                                    </div>
                                 )}
 
                                 {/* 1kg Option (Now in row 2) */}
-                                {quantityConfig["1kg"] ? (
+                                {quantityConfig["1kg"] && (
                                     <button
                                         onClick={() => setQuantityType('1kg')}
                                         className={`p-4 rounded-xl border-2 text-left transition-all ${quantityType === '1kg'
@@ -262,15 +263,10 @@ const ProductDetails = () => {
                                             <span className={`text-sm font-bold ${quantityType === '1kg' ? 'text-[#FC8019]' : 'text-[#60646C]'}`}>₹{currentPrice}</span>
                                         </div>
                                     </button>
-                                ) : (
-                                    <div className="p-4 rounded-xl border-2 border-gray-200 bg-gray-50 text-left opacity-60">
-                                        <div className="text-lg font-bold text-gray-400">1kg</div>
-                                        <div className="text-[10px] text-red-500 font-bold uppercase">Unavailable</div>
-                                    </div>
                                 )}
 
                                 {/* Custom Option (Now in row 2) */}
-                                {quantityConfig["custom"] ? (
+                                {quantityConfig["custom"] && (
                                     <button
                                         onClick={() => {
                                             setQuantityType('custom');
@@ -286,11 +282,6 @@ const ProductDetails = () => {
                                             <span className={`text-sm font-bold ${quantityType === 'custom' ? 'text-[#FC8019]' : 'text-[#60646C]'}`}>1kg+ Only</span>
                                         </div>
                                     </button>
-                                ) : (
-                                    <div className="p-4 rounded-xl border-2 border-gray-200 bg-gray-50 text-left opacity-60">
-                                        <div className="text-lg font-bold text-gray-400">Custom</div>
-                                        <div className="text-[10px] text-red-500 font-bold uppercase">Unavailable</div>
-                                    </div>
                                 )}
                             </div>
 
