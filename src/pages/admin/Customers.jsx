@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, Mail, Phone, MapPin, ShoppingBag, DollarSign, Users, RefreshCcw, Trash2 } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
