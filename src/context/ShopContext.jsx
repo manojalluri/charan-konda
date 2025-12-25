@@ -99,9 +99,6 @@ export const ShopProvider = ({ children }) => {
             const cachedSettings = localStorage.getItem('cutora-store-settings-v2');
             if (cachedSettings) setStoreSettings(JSON.parse(cachedSettings));
 
-            const cachedProducts = localStorage.getItem('cutora-products-v2');
-            if (cachedProducts) setProducts(JSON.parse(cachedProducts));
-
             let initialUser = null;
             const savedAuth = localStorage.getItem('cutora-user-v2');
             if (savedAuth) {
@@ -126,10 +123,7 @@ export const ShopProvider = ({ children }) => {
         localStorage.setItem('cutora-cart-v2', JSON.stringify(cart));
     }, [cart]);
 
-    useEffect(() => {
-        // Always update cache to reflect the current state of DB
-        localStorage.setItem('cutora-products-v2', JSON.stringify(products));
-    }, [products]);
+
 
     useEffect(() => {
         localStorage.setItem('cutora-config-v2', JSON.stringify(siteConfig));
