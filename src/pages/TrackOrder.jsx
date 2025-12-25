@@ -7,17 +7,17 @@ import FadeIn from '../components/FadeIn';
 const TrackOrder = () => {
     const { orders } = useShop();
     const location = useLocation();
-    const [orderIdInput, setOrderIdInput] = useState('');
+    const [orderIdInput, setOrderIdInput] = useState(location.state?.orderId || '');
     const [order, setOrder] = useState(null);
     const [error, setError] = useState('');
     const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => {
         if (location.state?.orderId && orders.length > 0) {
-            setOrderIdInput(location.state.orderId);
             // Trigger tracking automatically
             const foundOrder = orders.find(o => o.id === location.state.orderId);
             if (foundOrder) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setOrder(foundOrder);
             }
         }

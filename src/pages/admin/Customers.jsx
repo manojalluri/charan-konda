@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Eye, Mail, Phone, MapPin, ShoppingBag, DollarSign, Users, RefreshCcw, Trash2 } from 'lucide-react';
+import { Search, Eye, Mail, Phone, MapPin, ShoppingBag, DollarSign, Users, RefreshCcw, Trash2 } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
 const Customers = () => {
@@ -11,7 +11,7 @@ const Customers = () => {
     useEffect(() => {
         if (fetchUsers) fetchUsers();
         if (fetchAllOrders) fetchAllOrders();
-    }, []);
+    }, [fetchUsers, fetchAllOrders]);
 
     const handleRefresh = async () => {
         setIsRefreshing(true);
@@ -97,7 +97,7 @@ const Customers = () => {
         customer.phone.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.finalAmount || 0), 0);
+
 
     return (
         <div className="p-6">

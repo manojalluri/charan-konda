@@ -1,28 +1,30 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, Fish, User, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Menu, X, Fish, User } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Navbar = () => {
-    const { cart, siteConfig, user, logoutUser } = useShop(); // Read siteConfig, user state
-    const [isOpen, setIsOpen] = useState(false);
+const NavLink = ({ to, children, onClick }) => {
     const location = useLocation();
+    const isActive = location.pathname === to;
+    return (
+        <Link
+            to={to}
+            className={`px-4 py-2 rounded-lg font-bold text-sm tracking-wide transition-colors ${isActive ? 'text-brand-orange' : 'text-brand-gray hover:text-brand-orange'}`}
+            onClick={onClick}
+        >
+            {children}
+        </Link>
+    );
+};
+
+const Navbar = () => {
+    const { cart, siteConfig, user, logoutUser } = useShop();
+    const [isOpen, setIsOpen] = useState(false);
 
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-    const NavLink = ({ to, children }) => {
-        const isActive = location.pathname === to;
-        return (
-            <Link
-                to={to}
-                className={`px-4 py-2 rounded-lg font-bold text-sm tracking-wide transition-colors ${isActive ? 'text-brand-orange' : 'text-brand-gray hover:text-brand-orange'}`}
-                onClick={() => setIsOpen(false)}
-            >
-                {children}
-            </Link>
-        );
-    };
+    const closeMenu = () => setIsOpen(false);
 
     return (
         <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 h-20 flex items-center">
@@ -50,21 +52,21 @@ const Navbar = () => {
 
                     {/* Desktop Nav - Centered & Premium */}
                     <div className="hidden md:flex items-center gap-8 text-sm font-bold tracking-wide">
-                        <NavLink to="/">
+                        <NavLink to="/" onClick={closeMenu}>
                             <span className="group-hover:text-[#FC8019] transition-colors">HOME</span>
                         </NavLink>
-                        <NavLink to="/menu">
+                        <NavLink to="/menu" onClick={closeMenu}>
                             <span className="group-hover:text-[#FC8019] transition-colors">FRESH CUTS</span>
                         </NavLink>
                         {user && (
-                            <NavLink to="/orders">
+                            <NavLink to="/orders" onClick={closeMenu}>
                                 <span className="group-hover:text-[#FC8019] transition-colors">MY ORDERS</span>
                             </NavLink>
                         )}
-                        <NavLink to="/track-order">
+                        <NavLink to="/track-order" onClick={closeMenu}>
                             <span className="group-hover:text-[#FC8019] transition-colors">TRACK ORDER</span>
                         </NavLink>
-                        <NavLink to="/contact">
+                        <NavLink to="/contact" onClick={closeMenu}>
                             <span className="group-hover:text-[#FC8019] transition-colors">CONTACT US</span>
                         </NavLink>
                     </div>
@@ -130,11 +132,11 @@ const Navbar = () => {
                     >
                         <div className="px-6 py-6 space-y-4 flex flex-col">
                             {user && <div className="font-bold text-[#FC8019] mb-2">Welcome, {user.name}</div>}
-                            <NavLink to="/">HOME</NavLink>
-                            <NavLink to="/menu">FRESH CUTS</NavLink>
-                            {user && <NavLink to="/orders">MY ORDERS</NavLink>}
-                            <NavLink to="/track-order">TRACK ORDER</NavLink>
-                            <NavLink to="/contact">CONTACT US</NavLink>
+                            <NavLink to="/" onClick={closeMenu}>HOME</NavLink>
+                            <NavLink to="/menu" onClick={closeMenu}>FRESH CUTS</NavLink>
+                            {user && <NavLink to="/orders" onClick={closeMenu}>MY ORDERS</NavLink>}
+                            <NavLink to="/track-order" onClick={closeMenu}>TRACK ORDER</NavLink>
+                            <NavLink to="/contact" onClick={closeMenu}>CONTACT US</NavLink>
                             <hr className="border-gray-100 my-2" />
                             {user ? (
                                 <button onClick={() => { logoutUser(); setIsOpen(false); }} className="flex items-center gap-2 font-bold text-red-500 p-2 hover:bg-red-50 rounded-lg w-full text-left">

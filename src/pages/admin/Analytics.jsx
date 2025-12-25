@@ -4,7 +4,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { useShop } from '../../context/ShopContext';
 
 const Analytics = () => {
-    const { orders, products } = useShop();
+    const { orders } = useShop();
     const [dateRange, setDateRange] = useState('7days');
 
     // Calculate real stats
@@ -241,8 +241,8 @@ const Analytics = () => {
                                     <div className="w-full bg-gray-100 rounded-full h-1.5">
                                         <div
                                             className={`h-full rounded-full ${status === 'Delivered' ? 'bg-green-500' :
-                                                    status === 'Cancelled' ? 'bg-red-500' :
-                                                        'bg-blue-500'
+                                                status === 'Cancelled' ? 'bg-red-500' :
+                                                    'bg-blue-500'
                                                 }`}
                                             style={{ width: `${percentage}%` }}
                                         />

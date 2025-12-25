@@ -22,6 +22,7 @@ const Settings = () => {
 
     useEffect(() => {
         if (siteConfig) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setStoreSettings(prev => ({ ...prev, ...siteConfig }));
         }
     }, [siteConfig]);

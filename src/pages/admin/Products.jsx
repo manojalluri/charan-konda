@@ -18,7 +18,7 @@ import {
 import { useShop } from '../../context/ShopContext';
 
 const Products = () => {
-    const { products, addProduct, updateProduct, deleteProduct, isProductsLoading } = useShop();
+    const { products, addProduct, updateProduct, deleteProduct } = useShop();
     const [searchQuery, setSearchQuery] = useState('');
     const [showProductForm, setShowProductForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);

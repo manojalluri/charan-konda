@@ -5,18 +5,15 @@ import { useShop } from '../../context/ShopContext';
 
 const Orders = () => {
     const { orders, updateOrderStatus, fetchAllOrders, deleteOrder } = useShop();
+    const location = useLocation();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
-    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [selectedOrderId, setSelectedOrderId] = useState(location.state?.selectedOrderId || null);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const location = useLocation();
+    // Derived state
+    const selectedOrder = orders.find(o => o.id === selectedOrderId);
 
-    useEffect(() => {
-        if (location.state?.selectedOrderId && orders.length > 0) {
-            const order = orders.find(o => o.id === location.state.selectedOrderId);
-            if (order) setSelectedOrder(order);
-        }
-    }, [location.state, orders]);
+    // Removed useEffect for location syncing as we use derived state now
 
     useEffect(() => {
         // Initial fetch
@@ -69,13 +66,7 @@ const Orders = () => {
     const handleStatusUpdate = (orderId, newStatus) => {
         if (updateOrderStatus) {
             updateOrderStatus(orderId, newStatus);
-            // Update selected order if it's open
-            if (selectedOrder && selectedOrder.id === orderId) {
-                setSelectedOrder(prevOrder => ({
-                    ...prevOrder,
-                    status: newStatus
-                }));
-            }
+            // Derived selectedOrder will update automatically when context orders update
         }
     };
 
@@ -84,8 +75,8 @@ const Orders = () => {
             const result = await deleteOrder(orderId);
             if (result.success) {
                 // If the details modal is open for this order, close it
-                if (selectedOrder && selectedOrder.id === orderId) {
-                    setSelectedOrder(null);
+                if (selectedOrderId === orderId) {
+                    setSelectedOrderId(null);
                 }
             } else {
                 alert(`Failed to delete order: ${result.message || 'Please try again.'}`);
@@ -233,7 +224,7 @@ const Orders = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                                             <button
-                                                onClick={() => setSelectedOrder(order)}
+                                                onClick={() => setSelectedOrderId(order.id)}
                                                 className="inline-flex items-center px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors text-sm font-medium"
                                             >
                                                 <Eye className="w-4 h-4 mr-1" />
@@ -282,7 +273,7 @@ const Orders = () => {
                                         </div>
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => setSelectedOrder(order)}
+                                                onClick={() => setSelectedOrderId(order.id)}
                                                 className="text-orange-600 font-bold text-xs uppercase tracking-wider bg-orange-50 px-3 py-1.5 rounded-lg"
                                             >
                                                 Details
@@ -317,7 +308,7 @@ const Orders = () => {
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
                                 <button
-                                    onClick={() => setSelectedOrder(null)}
+                                    onClick={() => setSelectedOrderId(null)}
                                     className="text-gray-400 hover:text-gray-600 text-2xl"
                                 >
                                     ✕
@@ -416,7 +407,7 @@ const Orders = () => {
                                 DELETE ORDER
                             </button>
                             <button
-                                onClick={() => setSelectedOrder(null)}
+                                onClick={() => setSelectedOrderId(null)}
                                 className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-bold transition-all"
                             >
                                 CLOSE

@@ -43,7 +43,8 @@ const ProductDetails = () => {
         else if (quantityType === '1kg') baseWeight = 1;
 
         const totalWeightInKg = baseWeight * quantity;
-        if (totalWeightInKg > 1) {
+        if (totalWeightInKg > 1 && quantityType !== 'custom') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setQuantityType('custom');
             setCustomWeight(Math.min(totalWeightInKg * 1000, activeConfig.customMax || 5000));
             setQuantity(1);
@@ -312,7 +313,8 @@ const ProductDetails = () => {
                                                     return;
                                                 }
                                                 const kgValue = parseFloat(valStr);
-                                                const maxKg = (quantityConfig.customMax || 10000) / 1000;
+                                                // maxKg removed as it was unused
+
 
                                                 if (!isNaN(kgValue)) {
                                                     setCustomWeight(kgValue * 1000);

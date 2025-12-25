@@ -7,7 +7,7 @@ class AdminErrorBoundary extends React.Component {
         this.state = { hasError: false, error: null, errorInfo: null };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(_) {
         return { hasError: true };
     }
 

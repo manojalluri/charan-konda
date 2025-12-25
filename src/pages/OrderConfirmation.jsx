@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Package, Home, Calendar, MapPin } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -8,24 +8,20 @@ const OrderConfirmation = () => {
     const { orderId } = useParams();
     const { orders } = useShop();
     const navigate = useNavigate();
-    const [order, setOrder] = useState(null);
+    const [order] = useMemo(() => {
+        // Find order in global state
+        let found = orders.find(o => o.id === orderId);
+        if (found) return [found];
 
-    useEffect(() => {
-        // Find order in global state (which should be synced with local storage/DB)
-        const foundOrder = orders.find(o => o.id === orderId);
-
-        if (foundOrder) {
-            setOrder(foundOrder);
-        } else {
-            // If not found immediately, it might be syncing. 
-            // For now, we rely on orders being present. 
-            // In a real app, we might want to fetch from DB individually if not in state.
+        // Fallback to local storage
+        try {
             const storedOrders = JSON.parse(localStorage.getItem('cutora-orders') || '[]');
-            const localOrder = storedOrders.find(o => o.id === orderId);
-            if (localOrder) {
-                setOrder(localOrder);
-            }
+            found = storedOrders.find(o => o.id === orderId);
+            if (found) return [found];
+        } catch (e) {
+            console.error("Error reading orders from local storage", e);
         }
+        return [null];
     }, [orderId, orders]);
 
     if (!order) {

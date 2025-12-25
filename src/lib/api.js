@@ -42,7 +42,7 @@ export const api = {
             }
             try {
                 return JSON.parse(text);
-            } catch (e) {
+            } catch {
                 console.error("Failed to parse JSON response:", text);
                 throw new Error("Invalid response from server");
             }
@@ -70,7 +70,7 @@ export const api = {
             try {
                 const errorData = await res.json();
                 errorText = errorData.message || errorData.error || errorText;
-            } catch (e) {
+            } catch {
                 errorText = await res.text();
             }
             throw new Error(errorText);

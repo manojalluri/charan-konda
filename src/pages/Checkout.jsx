@@ -36,6 +36,7 @@ const Checkout = () => {
     // Update name when user data loads
     useEffect(() => {
         if (user?.name && !formData.name) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData(prev => ({ ...prev, name: user.name }));
         }
     }, [user, formData.name]);

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 import { api } from '../lib/api';
@@ -18,6 +19,14 @@ const normalizeOrder = (order) => {
         trackingId: order.trackingId ?? order.tracking_id,
         courierPartner: order.courierPartner ?? order.courier_partner,
         userEmail: order.userEmail ?? order.user_email
+    };
+};
+
+const normalizeProduct = (product) => {
+    if (!product) return product;
+    return {
+        ...product,
+        id: product.id || product._id
     };
 };
 
@@ -109,6 +118,7 @@ export const ShopProvider = ({ children }) => {
             fetchAllData(initialUser);
         };
         init();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // --- PERSISTENCE (Auto-save Cache) ---
@@ -134,7 +144,7 @@ export const ShopProvider = ({ children }) => {
         if (!background) setIsProductsLoading(true);
         try {
             const data = await api.get('/products');
-            setProducts(Array.isArray(data) ? data : []);
+            setProducts(Array.isArray(data) ? data.map(normalizeProduct) : []);
         } catch (err) {
             console.error('Error fetching products:', err);
         } finally {
@@ -252,8 +262,9 @@ export const ShopProvider = ({ children }) => {
     const addProduct = async (productData) => {
         try {
             const data = await api.post('/products', productData);
-            setProducts(prev => [data, ...prev]);
-            return { success: true, data };
+            const normalized = normalizeProduct(data);
+            setProducts(prev => [normalized, ...prev]);
+            return { success: true, product: normalized };
         } catch (err) {
             console.error('Error adding product:', err);
             return { success: false };
@@ -263,8 +274,9 @@ export const ShopProvider = ({ children }) => {
     const updateProduct = async (id, updatedData) => {
         try {
             const data = await api.put(`/products/${id}`, updatedData);
-            setProducts(prev => prev.map(p => (p._id === id || p.id === id) ? data : p));
-            return { success: true };
+            const normalized = normalizeProduct(data);
+            setProducts(prev => prev.map(p => (p.id === id || p._id === id) ? normalized : p));
+            return { success: true, product: normalized };
         } catch (err) {
             console.error('Error updating product:', err);
             return { success: false };
@@ -325,8 +337,10 @@ export const ShopProvider = ({ children }) => {
             const updatedConfig = { ...siteConfig, ...newConfig };
             const data = await api.post('/settings', { id: 'site_config', value: updatedConfig });
             setSiteConfig(data.value);
+            return { success: true };
         } catch (err) {
             console.error('Error updating site config:', err);
+            return { success: false, error: err.message };
         }
     };
 
