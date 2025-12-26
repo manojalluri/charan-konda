@@ -90,20 +90,68 @@ const Products = () => {
         });
     };
 
-    const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files);
-
-        files.forEach(file => {
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreviews(prev => [...prev, reader.result]);
-                setNewProduct(prev => ({
-                    ...prev,
-                    images: [...prev.images, reader.result]
-                }));
-            };
             reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Max dimensions
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Compress to JPEG with 0.8 quality
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    resolve(dataUrl);
+                };
+            };
         });
+    };
+
+    const handleImageUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        const compressedImages = [];
+
+        for (const file of files) {
+            try {
+                const compressed = await compressImage(file);
+                compressedImages.push(compressed);
+            } catch (err) {
+                console.error("Error compressing image:", err);
+            }
+        }
+
+        if (compressedImages.length > 0) {
+            setImagePreviews(prev => [...prev, ...compressedImages]);
+            setNewProduct(prev => ({
+                ...prev,
+                images: [...prev.images, ...compressedImages]
+            }));
+        }
     };
 
     const handleRemoveImage = (index) => {
