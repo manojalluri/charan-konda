@@ -6,7 +6,7 @@ import FadeIn from '../components/FadeIn';
 
 const OrderConfirmation = () => {
     const { orderId } = useParams();
-    const { orders } = useShop();
+    const { orders, getProductPrice } = useShop();
     const navigate = useNavigate();
     const [order] = useMemo(() => {
         // Find order in global state
