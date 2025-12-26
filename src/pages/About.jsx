@@ -1,5 +1,6 @@
 import { Card } from '../components/ui/Card';
 import { Award, Target, Heart, Users } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export const About = () => {
     const values = [
@@ -27,6 +28,11 @@ export const About = () => {
 
     return (
         <div className="min-h-screen">
+            <SEO
+                title="About Us"
+                description="Learn about Cutora Fresh's mission to deliver the freshest meat and seafood. Sourced from Godavari farms to Hyderabad kitchens."
+                keywords="about cutora fresh, meat delivery startup, hyderabad seafood supply, godavari farms meat"
+            />
             {/* Hero */}
             <section className="section-padding bg-gradient-to-br from-primary-50 to-white">
                 <div className="container-custom text-center">

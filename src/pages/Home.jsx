@@ -4,6 +4,7 @@ import { ShieldCheck, Clock, Award, ArrowRight } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import ProductCard from '../components/ProductCard';
 import FadeIn from '../components/FadeIn';
+import SEO from '../components/SEO';
 
 const Home = () => {
     const { products, siteConfig } = useShop();
@@ -19,6 +20,11 @@ const Home = () => {
 
     return (
         <div className="min-h-screen">
+            <SEO
+                title="Home"
+                description={siteConfig.heroSubtitle || "Premium fresh meat, chicken, and seafood delivery in Bangalore."}
+                keywords="online meat delivery, fresh fish, mutton, chicken, cutora fresh, bangalore"
+            />
             {/* Hero Section */}
             {/* Hero Section */}
             <section className="relative h-[70vh] flex items-center justify-center overflow-hidden bg-[#1C1C1C]">

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingBag, Truck, ShieldCheck } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
+import SEO from '../components/SEO';
 
 const ProductDetails = () => {
     const { id } = useParams();
@@ -132,6 +133,12 @@ const ProductDetails = () => {
 
     return (
         <div className="min-h-screen bg-[#F0F0F5] py-12">
+            <SEO
+                title={product.name}
+                description={product.description || `Buy fresh ${product.name} online. Premium quality, hygienically cleaned and delivered to your doorstep.`}
+                image={product.image}
+                keywords={`${product.name}, ${product.category}, fresh meat delivery, buy ${product.name}, cutora fresh`}
+            />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <button
                     onClick={() => navigate(-1)}

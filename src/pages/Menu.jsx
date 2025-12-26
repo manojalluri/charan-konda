@@ -4,6 +4,9 @@ import { useShop } from '../context/ShopContext';
 import ProductCard from '../components/ProductCard';
 import FadeIn from '../components/FadeIn';
 
+import Link from 'react-router-dom'; // Was missing, needed if used? No, not used in selection but let's check imports
+import SEO from '../components/SEO';
+
 const Menu = () => {
     const { products } = useShop();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +26,11 @@ const Menu = () => {
         { id: 'mutton', label: 'Mutton' },
     ];
 
+    const getPageTitle = () => {
+        const cat = categories.find(c => c.id === activeCategory);
+        return cat ? `${cat.label} - Menu` : 'Menu';
+    };
+
     const filteredProducts = activeCategory === 'all'
         ? products
         : products.filter(p => {
@@ -41,6 +49,11 @@ const Menu = () => {
 
     return (
         <div className="min-h-screen bg-[#F0F0F5] pt-12 pb-20">
+            <SEO
+                title={getPageTitle()}
+                description="Browse our fresh selection of sea fish, river fish, chicken, mutton, and seafood. Daily catch delivered to your home."
+                keywords="buy fish online, chicken price, mutton delivery, seafood market"
+            />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <FadeIn className="text-center mb-12">

@@ -3,6 +3,7 @@ import { Mail, Phone, MessageCircle, Loader, Send, AlertCircle } from 'lucide-re
 import FadeIn from '../components/FadeIn';
 import emailjs from '@emailjs/browser';
 import { api } from '../lib/api';
+import SEO from '../components/SEO';
 
 const Contact = () => {
     const [sent, setSent] = useState(false);
@@ -65,6 +66,11 @@ const Contact = () => {
 
     return (
         <div className="min-h-screen bg-[#F0F0F5] py-12">
+            <SEO
+                title="Contact Us"
+                description="Get in touch with Cutora Fresh. Contact us for bulk orders, restaurant supplies, or general inquiries."
+                keywords="contact cutora fresh, customer support, bulk meat orders, seafood supplier contact"
+            />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <FadeIn className="text-center mb-12">
                     <h1 className="text-4xl font-extrabold text-[#1C1C1C] mb-4 tracking-tight">Contact Us</h1>
