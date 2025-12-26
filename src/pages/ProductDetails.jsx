@@ -305,7 +305,7 @@ const ProductDetails = () => {
                                     <div className="flex group shadow-sm">
                                         <input
                                             type="number"
-                                            step={(quantityConfig.customStep || 50) / 1000}
+                                            step="1"
                                             value={customWeight ? customWeight / 1000 : ''}
                                             onChange={(e) => {
                                                 const valStr = e.target.value;
@@ -313,7 +313,8 @@ const ProductDetails = () => {
                                                     setCustomWeight('');
                                                     return;
                                                 }
-                                                const kgValue = parseFloat(valStr);
+                                                // Only allow integer kgs as per user request
+                                                const kgValue = Math.floor(parseFloat(valStr));
                                                 if (!isNaN(kgValue)) {
                                                     setCustomWeight(kgValue * 1000);
                                                 }

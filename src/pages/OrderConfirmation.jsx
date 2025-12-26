@@ -94,13 +94,16 @@ const OrderConfirmation = () => {
                                                             <span className="text-[10px] font-extrabold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-md uppercase tracking-widest border border-orange-200/50">
                                                                 {item.cut}
                                                             </span>
+                                                            <span className="text-sm font-black text-[#FC8019]">
+                                                                {item.quantity} × {weightPerUnit}kg
+                                                            </span>
                                                             <span className="text-gray-300">•</span>
-                                                            <span className="text-sm font-extrabold text-[#FC8019]">
+                                                            <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                                                                 {totalKg.toFixed(2)} KG TOTAL
                                                             </span>
                                                         </div>
-                                                        <p className="text-[11px] text-gray-400 font-bold mt-1 uppercase tracking-tight">
-                                                            {item.quantity} {item.quantity > 1 ? 'Units' : 'Unit'} of {weightPerUnit}kg each
+                                                        <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tight">
+                                                            Bill Calculation: {item.quantity} {item.quantity > 1 ? 'Units' : 'Unit'} @ ₹{unitPrice}/kg
                                                         </p>
                                                     </div>
                                                 </div>

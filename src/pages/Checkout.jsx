@@ -195,7 +195,9 @@ const Checkout = () => {
                                                     <div className="flex items-center gap-2 mt-0.5">
                                                         <span className="text-[10px] font-bold text-orange-600 px-1.5 py-0.5 bg-orange-50 rounded uppercase">{item.cut}</span>
                                                         <span className="text-gray-300">•</span>
-                                                        <span className="text-[10px] font-bold text-gray-500">{totalWeight.toFixed(2)}kg Total</span>
+                                                        <span className="text-[10px] font-bold text-gray-500">{item.quantity} × {item.quantityInKg || 1}kg</span>
+                                                        <span className="text-gray-300">•</span>
+                                                        <span className="text-[10px] font-bold text-gray-400">{totalWeight.toFixed(2)}kg Total</span>
                                                     </div>
                                                 </div>
                                                 <p className="font-bold text-[#1C1C1C] text-sm">₹{Math.round(pricePerKg * totalWeight)}</p>
