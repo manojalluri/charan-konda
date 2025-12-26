@@ -28,9 +28,16 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:4173',
+    'http://localhost:5000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:4173',
     'https://charan-konda.vercel.app',
     // Add your production frontend URL here
 ];
+
+// Check if we're in development mode
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Add environment variable for additional origins
 if (process.env.ALLOWED_ORIGINS) {
@@ -39,13 +46,24 @@ if (process.env.ALLOWED_ORIGINS) {
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
+        // Allow requests with no origin (like mobile apps, Postman, or curl)
         if (!origin) return callback(null, true);
 
+        // In development, allow ALL localhost and 127.0.0.1 origins
+        if (isDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+            console.log(`✅ CORS: Allowed (dev mode) - ${origin}`);
+            return callback(null, true);
+        }
+
+        // Check against whitelist for production
         if (allowedOrigins.indexOf(origin) === -1) {
             const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            console.error(`❌ CORS Error: Blocked origin ${origin}`);
+            console.log('✅ Allowed origins:', allowedOrigins);
             return callback(new Error(msg), false);
         }
+
+        console.log(`✅ CORS: Allowed (whitelist) - ${origin}`);
         return callback(null, true);
     },
     credentials: true,
