@@ -114,6 +114,12 @@ export const ShopProvider = ({ children }) => {
             if (savedCart) setCart(JSON.parse(savedCart));
 
             // 2. Load Safety Net (Cached Real Data)
+            const cachedProducts = localStorage.getItem('cutora-products-v2');
+            if (cachedProducts) {
+                setProducts(JSON.parse(cachedProducts));
+                setIsProductsLoading(false);
+            }
+
             const cachedConfig = localStorage.getItem('cutora-config-v2');
             if (cachedConfig) setSiteConfig(JSON.parse(cachedConfig));
 
@@ -149,6 +155,12 @@ export const ShopProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('cutora-config-v2', JSON.stringify(siteConfig));
     }, [siteConfig]);
+
+    useEffect(() => {
+        if (products.length > 0) {
+            localStorage.setItem('cutora-products-v2', JSON.stringify(products));
+        }
+    }, [products]);
 
     useEffect(() => {
         localStorage.setItem('cutora-store-settings-v2', JSON.stringify(storeSettings));

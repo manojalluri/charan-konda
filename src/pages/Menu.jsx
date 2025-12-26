@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import ProductCard from '../components/ProductCard';
 import FadeIn from '../components/FadeIn';
-
-import Link from 'react-router-dom'; // Was missing, needed if used? No, not used in selection but let's check imports
 import SEO from '../components/SEO';
 
 const Menu = () => {
@@ -81,7 +79,7 @@ const Menu = () => {
                 {filteredProducts.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                         {filteredProducts.map((product, idx) => (
-                            <FadeIn key={product.id} delay={idx * 0.05}>
+                            <FadeIn key={product?._id || product?.id || idx} delay={idx * 0.05}>
                                 <ProductCard product={product} />
                             </FadeIn>
                         ))}
