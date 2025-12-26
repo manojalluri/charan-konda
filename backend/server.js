@@ -39,35 +39,9 @@ const allowedOrigins = [
 // Check if we're in development mode
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-// Add environment variable for additional origins
-if (process.env.ALLOWED_ORIGINS) {
-    allowedOrigins.push(...process.env.ALLOWED_ORIGINS.split(','));
-}
-
+// Simplify CORS to allow all origins, which is necessary for a public-facing API that should be accessible from any device or network.
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, Postman, or curl)
-        if (!origin) return callback(null, true);
-
-        // In development, allow localhost, 127.0.0.1, and local network IPs
-        if (isDevelopment && (
-            origin.includes('localhost') ||
-            origin.includes('127.0.0.1') ||
-            origin.includes('192.168.') ||
-            origin.includes('10.') ||
-            origin.includes('172.')
-        )) {
-            return callback(null, true);
-        }
-
-        // Check against whitelist for production
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
-        }
-
-        return callback(null, true);
-    },
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
