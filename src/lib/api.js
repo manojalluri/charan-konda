@@ -2,9 +2,9 @@ const getBaseUrl = () => {
     let url = import.meta.env.VITE_API_BASE_URL;
 
     // If URL is missing, fail gracefully without exposing production URL
-    if (!url || url === '/api') {
-        console.error('❌ VITE_API_BASE_URL is not configured in environment variables');
-        url = '/api'; // Use relative path as fallback for local dev
+    if (!url) {
+        console.warn('⚠️ VITE_API_BASE_URL is not configured, falling back to /api');
+        url = '/api';
     }
 
     // Ensure URL doesn't have double slashes if it ends with /
@@ -13,6 +13,7 @@ const getBaseUrl = () => {
 };
 
 const BASE_URL = getBaseUrl();
+console.log('📡 API BASE_URL:', BASE_URL);
 // API endpoint configured from environment variables
 
 const getHeaders = () => {
