@@ -8,15 +8,15 @@ const Checkout = () => {
     const { cart, placeOrder, getProductPrice, user, calculateDeliveryFee, calculateTax, coupon } = useShop();
     const navigate = useNavigate();
 
-    // Redirect if cart is empty
+    // Redirect if cart is empty (unless we are currently submitting)
     useEffect(() => {
-        if (cart.length === 0) {
+        if (cart.length === 0 && !isSubmitting) {
             const timer = setTimeout(() => {
-                if (cart.length === 0) navigate('/cart');
+                if (cart.length === 0 && !isSubmitting) navigate('/cart');
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [cart.length, navigate]);
+    }, [cart.length, navigate, isSubmitting]);
 
     const [formData, setFormData] = useState({
         name: user?.name || '',
@@ -177,9 +177,34 @@ const Checkout = () => {
                             </div>
 
                             {/* Order Summary */}
-                            <div className="bg-gray-50 p-4 rounded-xl">
-                                <h4 className="font-bold text-sm text-[#93959F] uppercase tracking-wider mb-3">Order Summary</h4>
-                                <div className="space-y-2 text-sm">
+                            <div className="bg-gray-50 p-6 rounded-2xl mb-6">
+                                <h4 className="font-bold text-sm text-[#93959F] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Order Summary</h4>
+
+                                {/* Itemized List */}
+                                <div className="space-y-4 mb-6">
+                                    {cart.map((item, idx) => {
+                                        const pricePerKg = getProductPrice(item.price, item.cut);
+                                        const totalWeight = (item.quantityInKg || 1) * item.quantity;
+                                        return (
+                                            <div key={idx} className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-[#1C1C1C] text-sm">{item.name}</p>
+                                                        <span className="text-[9px] font-bold text-gray-400 uppercase">{item.category}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className="text-[10px] font-bold text-orange-600 px-1.5 py-0.5 bg-orange-50 rounded uppercase">{item.cut}</span>
+                                                        <span className="text-gray-300">•</span>
+                                                        <span className="text-[10px] font-bold text-gray-500">{totalWeight.toFixed(2)}kg Total</span>
+                                                    </div>
+                                                </div>
+                                                <p className="font-bold text-[#1C1C1C] text-sm">₹{Math.round(pricePerKg * totalWeight)}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="space-y-2 text-sm border-t border-gray-200 pt-4">
                                     <div className="flex justify-between">
                                         <span className="text-[#60646C]">Item Total</span>
                                         <span className="font-semibold text-[#1C1C1C]">₹{itemTotal}</span>

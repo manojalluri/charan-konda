@@ -67,19 +67,30 @@ const OrderConfirmation = () => {
                                 {order.items.map((item, index) => (
                                     <div key={index} className="py-4 flex justify-between items-center group">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                                <Package className="text-orange-400" size={18} />
+                                            <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                                                <Package className="text-orange-500" size={18} />
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-gray-900">{item.name}</p>
-                                                <p className="text-sm text-gray-500">
-                                                    {item.cut} • {item.quantity}kg
+                                                <p className="font-bold text-gray-900">{item.name}</p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded uppercase tracking-wider">
+                                                        {item.cut}
+                                                    </span>
+                                                    <span className="text-gray-300">•</span>
+                                                    <span className="text-sm font-medium text-gray-600">
+                                                        {(item.quantityInKg * item.quantity).toFixed(2)} Kg Total
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-gray-400 font-medium">
+                                                    ({item.quantity} unit{item.quantity > 1 ? 's' : ''} of {item.quantityInKg}kg)
                                                 </p>
                                             </div>
                                         </div>
-                                        <p className="font-semibold text-gray-900">
-                                            ₹{(item.price || 0) * item.quantity}
-                                        </p>
+                                        <div className="text-right">
+                                            <p className="font-extrabold text-gray-900">
+                                                ₹{Math.round(getProductPrice(item.price, item.cut) * (item.quantityInKg || 1) * item.quantity)}
+                                            </p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

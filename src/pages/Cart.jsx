@@ -73,21 +73,24 @@ const Cart = () => {
                                         <div className="flex-1">
                                             <div className="flex items-start justify-between">
                                                 <div>
-                                                    <h3 className="font-bold text-[#1C1C1C] text-lg">{item.name}</h3>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <p className="text-sm text-[#93959F] font-medium uppercase tracking-wide">
-                                                            {item.category}
-                                                        </p>
-                                                        <span className="text-[#93959F]">•</span>
-                                                        <span className={`text-xs font-bold px-2 py-1 rounded ${item.cut === 'Uncut'
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="font-bold text-[#1C1C1C] text-lg">{item.name}</h3>
+                                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase tracking-widest">{item.category}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                        <span className={`text-[10px] font-extrabold px-2 py-1 rounded tracking-wider uppercase ${item.cut === 'Uncut'
                                                             ? 'bg-blue-100 text-blue-700'
-                                                            : 'bg-green-100 text-green-700'
+                                                            : 'bg-green-100 text-green-700 shadow-sm border border-green-200'
                                                             }`}>
                                                             {item.cut}
                                                         </span>
+                                                        <span className="text-gray-300">•</span>
+                                                        <span className="text-xs font-bold text-[#FC8019] bg-orange-50 px-2 py-1 rounded">
+                                                            {(quantityInKg * item.quantity).toFixed(2)} KG TOTAL
+                                                        </span>
                                                     </div>
-                                                    <p className="text-xs text-[#60646C] mt-1">
-                                                        ₹{itemPrice}/kg × {quantityInKg * item.quantity} kg ({item.quantity} units of {quantityInKg}kg each)
+                                                    <p className="text-[11px] text-[#93959F] mt-2 font-medium">
+                                                        Unit Billing: ₹{itemPrice} per kg × {item.quantity} units ({quantityInKg}kg/unit)
                                                     </p>
                                                 </div>
                                                 <div className="text-[#1C1C1C] font-extrabold text-lg">₹{itemSubtotal}</div>
