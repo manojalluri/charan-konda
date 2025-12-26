@@ -106,7 +106,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/products', async (req, res) => {
     try {
         const products = await Product.find()
-            .select('name price category image stock rating description cuts')
+            .select('name price category image stock stock_quantity status rating description cuts variants quantityConfig')
             .sort({ name: 1 })
             .lean();
         res.json(products);

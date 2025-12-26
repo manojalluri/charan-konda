@@ -270,7 +270,8 @@ const ProductDetails = () => {
                                     <button
                                         onClick={() => {
                                             setQuantityType('custom');
-                                            if (customWeight < 1000) setCustomWeight(1000);
+                                            const minWeight = quantityConfig.customMin || 1000;
+                                            if (customWeight < minWeight) setCustomWeight(minWeight);
                                         }}
                                         className={`p-4 rounded-xl border-2 text-left transition-all ${quantityType === 'custom'
                                             ? 'border-[#FC8019] bg-[#FC8019]/5 shadow-md ring-2 ring-[#FC8019]/20'
@@ -290,12 +291,12 @@ const ProductDetails = () => {
                                 <div className="mt-4 space-y-2">
                                     <div className="flex justify-between items-center mb-1">
                                         <label className="text-[10px] font-extrabold text-[#93959F] uppercase tracking-widest">ENTER WEIGHT (KGS)</label>
-                                        <span className="text-[10px] font-extrabold text-[#FC8019] uppercase tracking-widest">Min: 1kg</span>
+                                        <span className="text-[10px] font-extrabold text-[#FC8019] uppercase tracking-widest">Min: {quantityConfig.customMin / 1000}kg</span>
                                     </div>
                                     <div className="flex group shadow-sm">
                                         <input
                                             type="number"
-                                            step="0.05"
+                                            step={(quantityConfig.customStep || 50) / 1000}
                                             value={customWeight ? customWeight / 1000 : ''}
                                             onChange={(e) => {
                                                 const valStr = e.target.value;
@@ -304,18 +305,18 @@ const ProductDetails = () => {
                                                     return;
                                                 }
                                                 const kgValue = parseFloat(valStr);
-                                                // maxKg removed as it was unused
-
-
                                                 if (!isNaN(kgValue)) {
                                                     setCustomWeight(kgValue * 1000);
                                                 }
                                             }}
                                             onBlur={() => {
-                                                const minKg = 1;
+                                                const minKg = (quantityConfig.customMin || 1000) / 1000;
+                                                const maxKg = (quantityConfig.customMax || 100000) / 1000;
                                                 const currentKg = customWeight / 1000;
                                                 if (!customWeight || currentKg < minKg) {
                                                     setCustomWeight(minKg * 1000);
+                                                } else if (currentKg > maxKg) {
+                                                    setCustomWeight(maxKg * 1000);
                                                 }
                                             }}
                                             className="flex-1 h-14 px-4 bg-gray-50 border-2 border-gray-100 rounded-l-xl focus:border-[#FC8019] focus:bg-white focus:outline-none transition-all font-bold text-xl text-[#1C1C1C]"
@@ -378,7 +379,7 @@ const ProductDetails = () => {
                         {/* Cart Total Preview */}
                         <div className="bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-xl p-4 border border-orange-200">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm font-semibold text-[#1C1C1C]">Subtotal ({totalWeight}kg × {quantity} units)</span>
+                                <span className="text-sm font-semibold text-[#1C1C1C]">Subtotal ({totalWeight.toFixed(2)}kg × {quantity} units)</span>
                                 <span className="text-2xl font-extrabold text-[#FC8019]">₹{Math.round(itemTotal)}</span>
                             </div>
                             <div className="text-xs text-[#60646C] mt-1">

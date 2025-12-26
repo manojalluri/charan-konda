@@ -151,6 +151,14 @@ export const ShopProvider = ({ children }) => {
             const data = await api.get('/settings/site_config');
             if (data && data.value) {
                 setSiteConfig(prev => ({ ...prev, ...data.value }));
+                // Update storeSettings if they exist in the config
+                setStoreSettings(prev => ({
+                    ...prev,
+                    cleaningCharge: data.value.cleaningCharge ?? prev.cleaningCharge,
+                    cleaningEnabled: data.value.cleaningEnabled ?? prev.cleaningEnabled,
+                    cuttingCharge: data.value.cuttingCharge ?? prev.cuttingCharge,
+                    cuttingEnabled: data.value.cuttingEnabled ?? prev.cuttingEnabled
+                }));
             }
         } catch (err) {
             console.error('Error fetching settings:', err);
@@ -330,7 +338,18 @@ export const ShopProvider = ({ children }) => {
         try {
             const updatedConfig = { ...siteConfig, ...newConfig };
             const data = await api.post('/settings', { id: 'site_config', value: updatedConfig });
-            setSiteConfig(data.value);
+            const savedConfig = data.value;
+            setSiteConfig(savedConfig);
+
+            // Also update storeSettings to keep them in sync
+            setStoreSettings(prev => ({
+                ...prev,
+                cleaningCharge: savedConfig.cleaningCharge ?? prev.cleaningCharge,
+                cleaningEnabled: savedConfig.cleaningEnabled ?? prev.cleaningEnabled,
+                cuttingCharge: savedConfig.cuttingCharge ?? prev.cuttingCharge,
+                cuttingEnabled: savedConfig.cuttingEnabled ?? prev.cuttingEnabled
+            }));
+
             return { success: true };
         } catch (err) {
             console.error('Error updating site config:', err);
