@@ -128,11 +128,23 @@ export const ShopProvider = ({ children }) => {
 
             let initialUser = null;
             const savedAuth = localStorage.getItem('cutora-user-v2');
-            if (savedAuth) {
-                initialUser = JSON.parse(savedAuth);
-                setUser(initialUser);
-                setIsAdmin(initialUser.role === 'admin' || initialUser.role === 'owner');
-                setIsOwner(initialUser.role === 'owner');
+            const savedToken = localStorage.getItem('cutora-auth-token-v2');
+
+            if (savedAuth && savedToken) {
+                try {
+                    initialUser = JSON.parse(savedAuth);
+                    setUser(initialUser);
+                    setIsAdmin(initialUser.role === 'admin' || initialUser.role === 'owner');
+                    setIsOwner(initialUser.role === 'owner');
+                } catch (err) {
+                    console.error('Error parsing saved auth:', err);
+                    localStorage.removeItem('cutora-user-v2');
+                    localStorage.removeItem('cutora-auth-token-v2');
+                }
+            } else if (savedAuth || savedToken) {
+                // Cleanup if partially logged in
+                localStorage.removeItem('cutora-user-v2');
+                localStorage.removeItem('cutora-auth-token-v2');
             }
 
             // Mark auth as ready so UI can mount
@@ -422,7 +434,9 @@ export const ShopProvider = ({ children }) => {
             const loginData = isEmail ? { email: phoneOrEmail, password } : { phone: phoneOrEmail, password };
 
             const data = await api.post('/auth/login', loginData);
-            localStorage.setItem('cutora-auth-token', data.token);
+            if (!data.token) throw new Error('No token received from server');
+
+            localStorage.setItem('cutora-auth-token-v2', data.token);
             localStorage.setItem('cutora-user-v2', JSON.stringify(data.user));
             setUser(data.user);
             setIsAdmin(data.user.role === 'admin' || data.user.role === 'owner');
@@ -445,7 +459,9 @@ export const ShopProvider = ({ children }) => {
     const registerUser = async (name, email, phone, password) => {
         try {
             const data = await api.post('/auth/register', { name, email, phone, password });
-            localStorage.setItem('cutora-auth-token', data.token);
+            if (!data.token) throw new Error('No token received from server');
+
+            localStorage.setItem('cutora-auth-token-v2', data.token);
             localStorage.setItem('cutora-user-v2', JSON.stringify(data.user));
             setUser(data.user);
             return { success: true };
@@ -456,7 +472,7 @@ export const ShopProvider = ({ children }) => {
     };
 
     const logoutUser = () => {
-        localStorage.removeItem('cutora-auth-token');
+        localStorage.removeItem('cutora-auth-token-v2');
         localStorage.removeItem('cutora-user-v2');
         setUser(null);
         setIsAdmin(false);
