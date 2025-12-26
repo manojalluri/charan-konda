@@ -49,8 +49,14 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps, Postman, or curl)
         if (!origin) return callback(null, true);
 
-        // In development, allow ALL localhost and 127.0.0.1 origins
-        if (isDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+        // In development, allow localhost, 127.0.0.1, and local network IPs
+        if (isDevelopment && (
+            origin.includes('localhost') ||
+            origin.includes('127.0.0.1') ||
+            origin.includes('192.168.') ||
+            origin.includes('10.') ||
+            origin.includes('172.')
+        )) {
             return callback(null, true);
         }
 
