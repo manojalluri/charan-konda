@@ -18,13 +18,18 @@ const createAdminUser = async () => {
         await mongoose.connect(MONGODB_URI);
         console.log("Connected to MongoDB...");
 
-        // Admin credentials
+        // Admin credentials from env
         const adminData = {
-            name: "Admin",
-            email: "admin@cutora.com",
-            password: "Admin@2006",
+            name: process.env.ADMIN_NAME || "Admin",
+            email: process.env.ADMIN_EMAIL,
+            password: process.env.ADMIN_PASSWORD,
             role: "owner"
         };
+
+        if (!adminData.email || !adminData.password) {
+            console.error("❌ ADMIN_EMAIL and ADMIN_PASSWORD must be defined in .env");
+            process.exit(1);
+        }
 
         // Check if admin already exists
         const existingAdmin = await User.findOne({ email: adminData.email });
@@ -32,7 +37,7 @@ const createAdminUser = async () => {
             console.log("⚠️  Admin user already exists!");
             console.log("\nAdmin Credentials:");
             console.log("Email:", adminData.email);
-            console.log("Password: Admin@2006");
+            console.log("Password: Use the password configured in .env");
             await mongoose.connection.close();
             return;
         }
@@ -54,11 +59,11 @@ const createAdminUser = async () => {
         console.log("\n========================================");
         console.log("     ADMIN LOGIN CREDENTIALS");
         console.log("========================================");
-        console.log("Email:    admin@cutora.com");
-        console.log("Password: Admin@2006");
-        console.log("Role:     owner");
+        console.log("Email:    " + adminData.email);
+        console.log("Password: Use the password configured in .env");
+        console.log("Role:     " + adminData.role);
         console.log("========================================");
-        console.log("\nYou can now login at: http://localhost:5173/admin/login");
+        console.log("\nYou can now login at: /admin/login");
 
         await mongoose.connection.close();
     } catch (err) {

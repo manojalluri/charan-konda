@@ -18,9 +18,7 @@ node create-admin.js
 ### 3. What Happens
 - The script checks if an admin already exists.
 - If not, it creates a new user with **Owner** privileges.
-- **Default Credentials:**
-  - **Email:** `admin@cutora.com`
-  - **Password:** `Admin@2006`
+- **Credentials:** Uses the variables configured in your `backend/.env` file (`ADMIN_EMAIL`, `ADMIN_PASSWORD`).
 
 ---
 
