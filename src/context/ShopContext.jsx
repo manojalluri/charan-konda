@@ -268,12 +268,16 @@ export const ShopProvider = ({ children }) => {
 
     const addToCart = (product, quantity, cut) => {
         setCart(prev => {
-            // Extract quantityInKg from product if it exists (passed from ProductDetails)
             const quantityInKg = product.quantityInKg || 1;
-            const existing = prev.find(item => item.id === product.id && item.cut === cut && item.quantityInKg === quantityInKg);
+            const existing = prev.find(item =>
+                item.id === product.id &&
+                item.cut === cut &&
+                Math.abs((item.quantityInKg || 1) - quantityInKg) < 0.001
+            );
+
             if (existing) {
                 return prev.map(item =>
-                    (item.id === product.id && item.cut === cut && item.quantityInKg === quantityInKg)
+                    (item.id === product.id && item.cut === cut && Math.abs((item.quantityInKg || 1) - quantityInKg) < 0.001)
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
@@ -282,18 +286,22 @@ export const ShopProvider = ({ children }) => {
         });
     };
 
-    const updateQuantity = (productId, cut, newQuantity) => {
+    const updateQuantity = (productId, cut, newQuantity, quantityInKg = 1) => {
         if (newQuantity < 1) {
-            removeFromCart(productId, cut);
+            removeFromCart(productId, cut, quantityInKg);
             return;
         }
         setCart(prev => prev.map(item =>
-            (item.id === productId && item.cut === cut) ? { ...item, quantity: newQuantity } : item
+            (item.id === productId && item.cut === cut && Math.abs((item.quantityInKg || 1) - quantityInKg) < 0.001)
+                ? { ...item, quantity: newQuantity }
+                : item
         ));
     };
 
-    const removeFromCart = (productId, cut) => {
-        setCart(prev => prev.filter(item => !(item.id === productId && item.cut === cut)));
+    const removeFromCart = (productId, cut, quantityInKg = 1) => {
+        setCart(prev => prev.filter(item =>
+            !(item.id === productId && item.cut === cut && Math.abs((item.quantityInKg || 1) - quantityInKg) < 0.001)
+        ));
     };
 
     const clearCart = () => {

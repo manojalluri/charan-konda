@@ -64,35 +64,58 @@ const OrderConfirmation = () => {
                                 Order Items
                             </h2>
                             <div className="divide-y divide-gray-100">
-                                {order.items.map((item, index) => (
-                                    <div key={index} className="py-4 flex justify-between items-center group">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                                                <Package className="text-orange-500" size={18} />
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-gray-900">{item.name}</p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded uppercase tracking-wider">
-                                                        {item.cut}
-                                                    </span>
-                                                    <span className="text-gray-300">•</span>
-                                                    <span className="text-sm font-medium text-gray-600">
-                                                        {((item.quantityInKg || 1) * item.quantity).toFixed(2)} Kg Total
-                                                    </span>
+                                {(() => {
+                                    // Merge same items (id + cut + quantityInKg) just for display safety
+                                    const mergedItems = order.items.reduce((acc, current) => {
+                                        const key = `${current.id}-${current.cut}-${current.quantityInKg || 1}`;
+                                        if (acc[key]) {
+                                            acc[key].quantity += current.quantity;
+                                        } else {
+                                            acc[key] = { ...current };
+                                        }
+                                        return acc;
+                                    }, {});
+
+                                    return Object.values(mergedItems).map((item, index) => {
+                                        const weightPerUnit = item.quantityInKg || 1;
+                                        const totalKg = weightPerUnit * item.quantity;
+                                        const unitPrice = getProductPrice(item.price, item.cut);
+                                        const lineTotal = Math.round(unitPrice * totalKg);
+
+                                        return (
+                                            <div key={index} className="py-5 flex justify-between items-center group">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center border border-orange-100/50">
+                                                        <Package className="text-orange-500" size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-gray-900 text-lg">{item.name}</p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-[10px] font-extrabold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-md uppercase tracking-widest border border-orange-200/50">
+                                                                {item.cut}
+                                                            </span>
+                                                            <span className="text-gray-300">•</span>
+                                                            <span className="text-sm font-extrabold text-[#FC8019]">
+                                                                {totalKg.toFixed(2)} KG TOTAL
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[11px] text-gray-400 font-bold mt-1 uppercase tracking-tight">
+                                                            {item.quantity} {item.quantity > 1 ? 'Units' : 'Unit'} of {weightPerUnit}kg each
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-[10px] text-gray-400 font-medium">
-                                                    ({item.quantity} unit{item.quantity > 1 ? 's' : ''} of {item.quantityInKg || 1}kg)
-                                                </p>
+                                                <div className="text-right">
+                                                    <p className="font-black text-[#1C1C1C] text-xl">
+                                                        ₹{lineTotal}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase">
+                                                        ₹{unitPrice}/kg
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-extrabold text-gray-900">
-                                                ₹{Math.round(getProductPrice(item.price, item.cut) * (item.quantityInKg || 1) * item.quantity)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
+                                        );
+                                    });
+                                })()}
                             </div>
                             <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
                                 <div className="flex justify-between text-sm">
