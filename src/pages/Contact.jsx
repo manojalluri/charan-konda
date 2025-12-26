@@ -84,9 +84,9 @@ const Contact = () => {
                             <h3 className="text-xl font-bold mb-4 text-[#1C1C1C]">Bulk Orders?</h3>
                             <p className="text-[#60646C] mb-8 leading-relaxed">We supply fresh fish to top hotels and restaurants. Get special rates for bulk quantities.</p>
                             <div className="flex gap-4">
-                                <button className="w-full btn-primary flex items-center justify-center gap-2 h-12 shadow-md">
+                                <a href="tel:8309653769" className="w-full btn-primary flex items-center justify-center gap-2 h-12 shadow-md no-underline">
                                     <Phone size={18} /> CALL SALES
-                                </button>
+                                </a>
                             </div>
                         </div>
 
@@ -106,7 +106,9 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-[#1C1C1C]">Call Us</h4>
-                                    <p className="text-sm text-[#60646C]">+91 98765 43210 (9 AM - 9 PM)</p>
+                                    <p className="text-sm text-[#60646C] text-ellipsis over">
+                                        <a href="tel:8309653769" className="hover:text-[#FC8019] transition-colors">+91 8309653769</a> (9 AM - 9 PM)
+                                    </p>
                                 </div>
                             </div>
                         </div>
