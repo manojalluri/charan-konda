@@ -17,12 +17,18 @@ console.log('📡 API BASE_URL:', BASE_URL);
 // API endpoint configured from environment variables
 
 const getHeaders = () => {
-    const token = localStorage.getItem('cutora-auth-token-v2');
+    let token = localStorage.getItem('cutora-auth-token-v2');
+
+    // Fallback to old token key if new one is missing
+    if (!token || token === 'null' || token === 'undefined') {
+        token = localStorage.getItem('cutora-auth-token');
+    }
+
     const headers = {
         'Content-Type': 'application/json'
     };
 
-    // Only add Authorization if token exists and is not a string like "null" or "undefined"
+    // Only add Authorization if token exists and is valid
     if (token && token !== 'null' && token !== 'undefined' && token.length > 10) {
         headers['Authorization'] = `Bearer ${token}`;
     }

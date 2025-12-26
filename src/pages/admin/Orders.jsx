@@ -186,11 +186,21 @@ const Orders = () => {
                                             <div className="text-sm text-gray-700">
                                                 {order.items && order.items.length > 0 ? (
                                                     <>
-                                                        {order.items.slice(0, 2).map((item, idx) => (
-                                                            <div key={idx}>
-                                                                {item.name} ({item.cut}) - {item.quantity}kg
-                                                            </div>
-                                                        ))}
+                                                        {order.items.slice(0, 2).map((item, idx) => {
+                                                            const totalWeight = (item.quantityInKg || 1) * item.quantity;
+                                                            return (
+                                                                <div key={idx} className="mb-0.5 last:mb-0">
+                                                                    <span className="font-bold">{item.name}</span>
+                                                                    <span className="text-[10px] ml-1 bg-gray-100 px-1 rounded text-gray-400 uppercase">{item.category}</span>
+                                                                    <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                                        <span className="text-orange-600 font-bold">{item.cut}</span>
+                                                                        <span>•</span>
+                                                                        <span>{totalWeight.toFixed(2)}kg</span>
+                                                                        <span className="text-gray-400">({item.quantity}×{item.quantityInKg || 1}kg)</span>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
                                                         {order.items.length > 2 && (
                                                             <div className="text-xs text-gray-500">+{order.items.length - 2} more</div>
                                                         )}
@@ -344,13 +354,18 @@ const Orders = () => {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        Preparation: {item.cut} • Quantity: {item.quantity}kg
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-bold text-gray-900">{item.name}</p>
+                                                        <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded font-bold uppercase tracking-wider">{item.category}</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                        <span className="font-bold text-orange-600">{item.cut}</span> •
+                                                        <span className="mx-1">{((item.quantityInKg || 1) * item.quantity).toFixed(2)}kg Total</span>
+                                                        <span className="text-gray-400">({item.quantity} units × {item.quantityInKg || 1}kg)</span>
                                                     </p>
                                                 </div>
                                             </div>
-                                            <p className="text-sm font-medium text-gray-900">₹{item.price * item.quantity}</p>
+                                            <p className="text-sm font-bold text-gray-900">₹{Math.round((item.price || 0) * (item.quantityInKg || 1) * item.quantity)}</p>
                                         </div>
                                     ))}
                                 </div>
