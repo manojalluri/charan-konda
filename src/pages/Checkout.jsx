@@ -36,10 +36,11 @@ const Checkout = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Calculate totals
+    // Calculate totals - FIXED: Now properly accounts for quantityInKg
     const itemTotal = cart.reduce((sum, item) => {
-        const itemPrice = getProductPrice(item.price, item.cut);
-        return sum + (itemPrice * item.quantity);
+        const pricePerKg = getProductPrice(item.price, item.cut);
+        const quantityInKg = item.quantityInKg || 1;
+        return sum + (pricePerKg * quantityInKg * item.quantity);
     }, 0);
 
     const deliveryFee = calculateDeliveryFee(itemTotal);

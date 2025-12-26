@@ -1,9 +1,10 @@
 const getBaseUrl = () => {
     let url = import.meta.env.VITE_API_BASE_URL;
 
-    // If mission-critical variable is missing, use the known production URL as a safety net
+    // If URL is missing, fail gracefully without exposing production URL
     if (!url || url === '/api') {
-        url = 'https://charan-konda.onrender.com/api';
+        console.error('❌ VITE_API_BASE_URL is not configured in environment variables');
+        url = '/api'; // Use relative path as fallback for local dev
     }
 
     // Ensure URL doesn't have double slashes if it ends with /
@@ -12,7 +13,7 @@ const getBaseUrl = () => {
 };
 
 const BASE_URL = getBaseUrl();
-console.log("Connect to API at:", BASE_URL);
+// API endpoint configured from environment variables
 
 const getHeaders = () => {
     const token = localStorage.getItem('cutora-auth-token');

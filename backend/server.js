@@ -16,17 +16,89 @@ const User = require('./models/User');
 const Contact = require('./models/Contact');
 const Coupon = require('./models/Coupon');
 
-// ... (previous imports)
-
 // --- SERVER INIT ---
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --- CONFIGURATION ---
 dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+// CORS Configuration - SECURITY IMPROVEMENT
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    'https://charan-konda.vercel.app',
+    // Add your production frontend URL here
+];
+
+// Add environment variable for additional origins
+if (process.env.ALLOWED_ORIGINS) {
+    allowedOrigins.push(...process.env.ALLOWED_ORIGINS.split(','));
+}
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(compression());
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '10mb' })); // Reduced from 50mb for security
+
+// Security Headers
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    next();
+});
+
+// Rate limiting middleware (simple implementation)
+const requestCounts = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const MAX_REQUESTS = 100; // 100 requests per minute
+
+app.use((req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+
+    if (!requestCounts.has(ip)) {
+        requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    } else {
+        const data = requestCounts.get(ip);
+        if (now > data.resetTime) {
+            requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+        } else {
+            data.count++;
+            if (data.count > MAX_REQUESTS) {
+                return res.status(429).json({ message: 'Too many requests. Please try again later.' });
+            }
+        }
+    }
+    next();
+});
+
+// Clean up old rate limit entries every 5 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, data] of requestCounts.entries()) {
+        if (now > data.resetTime) {
+            requestCounts.delete(ip);
+        }
+    }
+}, 300000);
 
 // --- DEBUGGING LOGS ---
 console.log("--- SERVER STARTING ---");
@@ -37,13 +109,29 @@ if (!process.env.MONGODB_URI) {
     process.exit(1);
 }
 
+if (!process.env.JWT_SECRET) {
+    console.error('❌ FATAL ERROR: JWT_SECRET is missing!');
+    process.exit(1);
+}
+
 // Health Check
 app.get('/', (req, res) => res.json({ status: 'API is running' }));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.error('MongoDB Connection Error:', err));
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch(err => {
+        console.error('❌ MongoDB Connection Error:', err);
+        process.exit(1);
+    });
+
+// Input Sanitization Helper
+const sanitizeInput = (input) => {
+    if (typeof input === 'string') {
+        return input.trim().replace(/[<>]/g, '');
+    }
+    return input;
+};
 
 // --- MIDDLEWARE ---
 const authenticate = (req, res, next) => {
@@ -114,6 +202,15 @@ app.delete('/api/coupons/:id', authenticate, adminOnly, async (req, res) => {
 app.post('/api/coupons/verify', async (req, res) => {
     try {
         const { code, amount } = req.body;
+
+        // Input validation
+        if (!code || typeof code !== 'string') {
+            return res.status(400).json({ message: 'Invalid coupon code' });
+        }
+        if (!amount || typeof amount !== 'number' || amount < 0) {
+            return res.status(400).json({ message: 'Invalid amount' });
+        }
+
         const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
 
         if (!coupon) return res.status(404).json({ message: 'Invalid or expired coupon' });
@@ -138,7 +235,7 @@ app.post('/api/coupons/verify', async (req, res) => {
             discount = coupon.value;
         }
 
-        res.json({ success: true, discount, couponCode: coupon.code, couponId: coupon._id });
+        res.json({ success: true, discount: Math.round(discount), couponCode: coupon.code, couponId: coupon._id });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -152,10 +249,26 @@ app.post('/api/coupons/verify', async (req, res) => {
 // --- AUTH ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { name, email, phone, password } = req.body;
+        let { name, email, phone, password } = req.body;
+
+        // Sanitize inputs
+        name = sanitizeInput(name);
+        email = sanitizeInput(email);
+        phone = sanitizeInput(phone);
+
+        // Validation
         if (!phone || !password || !name) {
             return res.status(400).json({ message: 'Name, Phone and Password are required.' });
         }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+        }
+
+        if (!/^[0-9]{10}$/.test(phone)) {
+            return res.status(400).json({ message: 'Phone number must be 10 digits.' });
+        }
+
         const existingUser = await User.findOne({ phone });
         if (existingUser) return res.status(400).json({ message: 'User with this phone number already exists' });
 
@@ -172,7 +285,12 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
     try {
-        const { phone, email, password } = req.body;
+        let { phone, email, password } = req.body;
+
+        // Sanitize inputs
+        phone = sanitizeInput(phone);
+        email = sanitizeInput(email);
+
         let user = phone ? await User.findOne({ phone }) : await User.findOne({ email });
         if (!user) return res.status(400).json({ message: 'User not found' });
 
@@ -212,6 +330,7 @@ app.post('/api/products', authenticate, adminOnly, async (req, res) => {
 app.put('/api/products/:id', authenticate, adminOnly, async (req, res) => {
     try {
         const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!product) return res.status(404).json({ message: 'Product not found' });
         res.json(product);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -220,7 +339,8 @@ app.put('/api/products/:id', authenticate, adminOnly, async (req, res) => {
 
 app.delete('/api/products/:id', authenticate, adminOnly, async (req, res) => {
     try {
-        await Product.findByIdAndDelete(req.params.id);
+        const product = await Product.findByIdAndDelete(req.params.id);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
         res.json({ message: 'Product deleted' });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -258,9 +378,17 @@ app.get('/api/orders/:id', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
     try {
         const orderData = req.body;
+
+        // Validate required fields
         if (!orderData.id || !orderData.user_email) {
             return res.status(400).json({ message: "Missing required order fields" });
         }
+
+        // Validate order items
+        if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+            return res.status(400).json({ message: "Order must contain at least one item" });
+        }
+
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             try {
@@ -287,6 +415,7 @@ app.post('/api/orders', async (req, res) => {
 app.put('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
     try {
         const order = await Order.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+        if (!order) return res.status(404).json({ message: 'Order not found' });
         res.json(order);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -322,7 +451,6 @@ app.delete('/api/users/:id', authenticate, adminOnly, async (req, res) => {
         const userId = req.params.id;
         const user = await User.findByIdAndDelete(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
-        // Optional: Delete user's orders too? User usually wants to keep history but let's just delete the user for now as requested.
         res.json({ success: true, message: 'User deleted' });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -338,9 +466,18 @@ app.get('/api/contact', authenticate, adminOnly, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
 app.post('/api/contact', async (req, res) => {
     try {
-        const contact = new Contact(req.body);
+        let { name, phone, email, requirement } = req.body;
+
+        // Sanitize inputs
+        name = sanitizeInput(name);
+        phone = sanitizeInput(phone);
+        email = sanitizeInput(email);
+        requirement = sanitizeInput(requirement);
+
+        const contact = new Contact({ name, phone, email, requirement });
         await contact.save();
         res.status(201).json(contact);
     } catch (err) {
@@ -372,4 +509,18 @@ app.post('/api/settings', authenticate, adminOnly, async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ message: 'Route not found' });
+});
+
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

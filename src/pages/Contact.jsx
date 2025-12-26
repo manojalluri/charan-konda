@@ -97,7 +97,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-[#1C1C1C]">Email Us</h4>
-                                    <p className="text-sm text-[#60646C]">support@cutorafishes.com</p>
+                                    <p className="text-sm text-[#60646C]">cutorafishes@gmail.com</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 p-5 border border-gray-200 rounded-2xl bg-white hover:border-[#FC8019] transition-colors group cursor-default">

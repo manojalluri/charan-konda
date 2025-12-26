@@ -24,7 +24,7 @@ export const Footer = () => {
                             <a href="#" className="w-10 h-10 bg-dark-600 rounded-lg flex items-center justify-center hover:bg-primary transition-colors">
                                 <Twitter size={18} />
                             </a>
-                            <a href="#" className="w-10 h-10 bg-dark-600 rounded-lg flex items-center justify-center hover:bg-primary transition-colors">
+                            <a href="https://www.instagram.com/cutorafishes?igsh=MWk4a3F2MGZ2bWg3aQ==" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-dark-600 rounded-lg flex items-center justify-center hover:bg-primary transition-colors">
                                 <Instagram size={18} />
                             </a>
                             <a href="#" className="w-10 h-10 bg-dark-600 rounded-lg flex items-center justify-center hover:bg-primary transition-colors">
@@ -65,13 +65,13 @@ export const Footer = () => {
                                 <Phone size={20} className="mt-1 flex-shrink-0" />
                                 <span>+91 98765 43210</span>
                             </a>
-                            <a href="mailto:contact@CUTORA.com" className="flex items-start gap-3 text-gray-400 hover:text-primary transition-colors">
+                            <a href="mailto:cutorafishes@gmail.com" className="flex items-start gap-3 text-gray-400 hover:text-primary transition-colors">
                                 <Mail size={20} className="mt-1 flex-shrink-0" />
-                                <span>contact@CUTORA.com</span>
+                                <span>cutorafishes@gmail.com</span>
                             </a>
                             <div className="flex items-start gap-3 text-gray-400">
                                 <MapPin size={20} className="mt-1 flex-shrink-0" />
-                                <span>Hyderabad, Telangana<br />India - 500001</span>
+                                <span>Andhra Pradesh, West Godavari,<br />Bhimavaram, India</span>
                             </div>
                         </div>
                     </div>

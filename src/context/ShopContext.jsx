@@ -244,15 +244,17 @@ export const ShopProvider = ({ children }) => {
 
     const addToCart = (product, quantity, cut) => {
         setCart(prev => {
-            const existing = prev.find(item => item.id === product.id && item.cut === cut);
+            // Extract quantityInKg from product if it exists (passed from ProductDetails)
+            const quantityInKg = product.quantityInKg || 1;
+            const existing = prev.find(item => item.id === product.id && item.cut === cut && item.quantityInKg === quantityInKg);
             if (existing) {
                 return prev.map(item =>
-                    (item.id === product.id && item.cut === cut)
+                    (item.id === product.id && item.cut === cut && item.quantityInKg === quantityInKg)
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
             }
-            return [...prev, { ...product, quantity, cut }];
+            return [...prev, { ...product, quantity, cut, quantityInKg }];
         });
     };
 

@@ -20,7 +20,11 @@ const Cart = () => {
     const navigate = useNavigate();
 
     // Calculate totals
-    const total = cart.reduce((sum, item) => sum + (getProductPrice(item.price, item.cut) * item.quantity), 0);
+    const total = cart.reduce((sum, item) => {
+        const pricePerKg = getProductPrice(item.price, item.cut);
+        const quantityInKg = item.quantityInKg || 1;
+        return sum + (pricePerKg * quantityInKg * item.quantity);
+    }, 0);
 
     const deliveryFee = calculateDeliveryFee(total);
     const taxesAndCharges = calculateTax(total);
@@ -57,10 +61,11 @@ const Cart = () => {
                         <div className="flex-1 space-y-4">
                             {cart.map((item) => {
                                 const itemPrice = getProductPrice(item.price, item.cut);
-                                const itemSubtotal = itemPrice * item.quantity;
+                                const quantityInKg = item.quantityInKg || 1;
+                                const itemSubtotal = itemPrice * quantityInKg * item.quantity;
 
                                 return (
-                                    <div key={`${item.id}-${item.cut}`} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex gap-6 items-center hover:shadow-md transition-shadow">
+                                    <div key={`${item.id}-${item.cut}-${quantityInKg}`} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex gap-6 items-center hover:shadow-md transition-shadow">
                                         <div className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100">
                                             <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                         </div>
@@ -82,7 +87,7 @@ const Cart = () => {
                                                         </span>
                                                     </div>
                                                     <p className="text-xs text-[#60646C] mt-1">
-                                                        ₹{itemPrice}/kg × {item.quantity} kg
+                                                        ₹{itemPrice}/kg × {quantityInKg * item.quantity} kg ({item.quantity} units of {quantityInKg}kg each)
                                                     </p>
                                                 </div>
                                                 <div className="text-[#1C1C1C] font-extrabold text-lg">₹{itemSubtotal}</div>
@@ -184,15 +189,20 @@ const Cart = () => {
                                 <p className="text-xs font-bold text-[#93959F] uppercase tracking-wider mb-2">Items ({cart.length})</p>
                                 {cart.map((item) => {
                                     const itemPrice = getProductPrice(item.price, item.cut);
+                                    const quantityInKg = item.quantityInKg || 1;
+                                    const totalWeight = quantityInKg * item.quantity;
                                     return (
-                                        <div key={`${item.id}-${item.cut}`} className="flex justify-between text-xs">
+                                        <div key={`${item.id}-${item.cut}-${quantityInKg}`} className="flex justify-between text-xs">
                                             <span className="text-[#60646C]">
                                                 {item.name.length > 25 ? item.name.substring(0, 25) + '...' : item.name}
                                                 <span className={`ml-1 ${item.cut === 'Uncut' ? 'text-blue-600' : 'text-green-600'}`}>
                                                     ({item.cut})
                                                 </span>
+                                                <span className="ml-1 text-gray-500">
+                                                    {totalWeight}kg
+                                                </span>
                                             </span>
-                                            <span className="text-[#1C1C1C] font-semibold">₹{itemPrice * item.quantity}</span>
+                                            <span className="text-[#1C1C1C] font-semibold">₹{itemPrice * totalWeight}</span>
                                         </div>
                                     );
                                 })}

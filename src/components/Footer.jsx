@@ -17,7 +17,7 @@ const Footer = () => {
                             Premium fresh meats and seafood, hygienically cleaned and delivered to your doorstep. From the farm & coast to your kitchen daily.
                         </p>
                         <div className="flex gap-4">
-                            <a href="#" className="text-white hover:text-[#FC8019] transition-colors"><Instagram size={24} /></a>
+                            <a href="https://www.instagram.com/cutorafishes?igsh=MWk4a3F2MGZ2bWg3aQ==" target="_blank" rel="noopener noreferrer" className="text-white hover:text-[#FC8019] transition-colors"><Instagram size={24} /></a>
                             <a href="#" className="text-white hover:text-[#FC8019] transition-colors"><Facebook size={24} /></a>
                             <a href="#" className="text-white hover:text-[#FC8019] transition-colors"><Twitter size={24} /></a>
                         </div>
@@ -50,7 +50,7 @@ const Footer = () => {
                         <ul className="space-y-4 text-sm text-[#93959F] font-medium">
                             <li className="flex items-start gap-3">
                                 <MapPin size={20} className="text-[#FC8019] shrink-0" />
-                                <span>123 Ocean Drive, Coastal Market, City - 500001</span>
+                                <span>Andhra Pradesh, West Godavari, Bhimavaram</span>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Phone size={20} className="text-[#FC8019] shrink-0" />
@@ -58,7 +58,7 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail size={20} className="text-[#FC8019] shrink-0" />
-                                <span>help@cutorafishes.com</span>
+                                <span>cutorafishes@gmail.com</span>
                             </li>
                         </ul>
                     </div>
