@@ -1,0 +1,11 @@
+﻿
+C:\Users\manoj\Desktop\ecom 2.0\src\context\ShopContext.jsx
+  185:8  warning  React Hook useEffect has missing dependencies: 'coupon' and 'getProductPrice'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\manoj\Desktop\ecom 2.0\src\lib\validation.js
+   81:37  error  Unnecessary escape character: \.  no-useless-escape
+  106:34  error  Unnecessary escape character: \-  no-useless-escape
+  191:34  error  Unnecessary escape character: \-  no-useless-escape
+
+Γ£û 4 problems (3 errors, 1 warning)
+

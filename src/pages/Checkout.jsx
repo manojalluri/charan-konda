@@ -30,7 +30,9 @@ const Checkout = () => {
     // Update name when user data loads
     useEffect(() => {
         if (user?.name && !formData.name) {
-            setFormData(prev => ({ ...prev, name: user.name }));
+            setTimeout(() => {
+                setFormData(prev => ({ ...prev, name: user.name }));
+            }, 0);
         }
     }, [user, formData.name]);
 

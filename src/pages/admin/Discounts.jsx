@@ -91,10 +91,6 @@ const Discounts = () => {
         }
     };
 
-    const getUsagePercentage = (discount) => {
-        if (!discount.usageLimit) return 0;
-        return (discount.usageCount / discount.usageLimit) * 100;
-    };
 
     if (loading) return <div className="p-10 text-center"><Loader className="animate-spin mx-auto" /> Loading discounts...</div>;
 

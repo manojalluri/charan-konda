@@ -78,7 +78,7 @@ export const isValidName = (name) => {
     if (name.length > 100) return false;
 
     // Allow letters, spaces, hyphens, apostrophes
-    const nameRegex = /^[a-zA-Z\s\-'\.]+$/;
+    const nameRegex = /^[a-zA-Z\s\-'.]+$/;
     return nameRegex.test(name);
 };
 
@@ -103,7 +103,7 @@ export const isValidCity = (city) => {
     if (city.length > 50) return false;
 
     // Allow letters, spaces, hyphens
-    const cityRegex = /^[a-zA-Z\s\-]+$/;
+    const cityRegex = /^[a-zA-Z\s-]+$/;
     return cityRegex.test(city);
 };
 
@@ -188,7 +188,7 @@ export const isValidCouponCode = (code) => {
     if (code.length > 20) return false;
 
     // Allow uppercase letters, numbers, and hyphens
-    const couponRegex = /^[A-Z0-9\-]+$/;
+    const couponRegex = /^[A-Z0-9-]+$/;
     return couponRegex.test(code.toUpperCase());
 };
 

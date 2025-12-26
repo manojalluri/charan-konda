@@ -37,10 +37,12 @@ const ProductDetails = () => {
     // Set initial valid quantity type
     useEffect(() => {
         if (product && !quantityConfig[quantityType]) {
-            if (quantityConfig["1kg"]) setQuantityType("1kg");
-            else if (quantityConfig["500g"]) setQuantityType("500g");
-            else if (quantityConfig["250g"]) setQuantityType("250g");
-            else if (quantityConfig["custom"]) setQuantityType("custom");
+            setTimeout(() => {
+                if (quantityConfig["1kg"]) setQuantityType("1kg");
+                else if (quantityConfig["500g"]) setQuantityType("500g");
+                else if (quantityConfig["250g"]) setQuantityType("250g");
+                else if (quantityConfig["custom"]) setQuantityType("custom");
+            }, 0);
         }
     }, [product, quantityConfig, quantityType]);
 
