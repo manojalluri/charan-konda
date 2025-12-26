@@ -96,7 +96,7 @@ const Cart = () => {
                                                         </span>
                                                     </div>
                                                     <p className="text-[11px] text-[#93959F] mt-2 font-medium">
-                                                        ₹{itemPrice} per kg × {item.quantity} units ({quantityInKg}kg each)
+                                                        Billing: {(quantityInKg * item.quantity).toFixed(2)}kg × ₹{itemPrice} ({item.quantity} units)
                                                     </p>
                                                 </div>
                                                 <div className="text-[#1C1C1C] font-extrabold text-lg">₹{Math.round(itemSubtotal)}</div>

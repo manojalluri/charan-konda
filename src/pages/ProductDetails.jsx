@@ -337,7 +337,7 @@ const ProductDetails = () => {
                                         </div>
                                     </div>
                                     <p className="text-[11px] text-[#2ECC71] font-bold mt-1">
-                                        Total: ₹{Math.round(currentPrice * (customWeight || 0) / 1000)}
+                                        Calculation: {(customWeight / 1000)}kg × ₹{currentPrice} = ₹{Math.round(currentPrice * (customWeight || 0) / 1000)}
                                     </p>
                                 </div>
                             )}

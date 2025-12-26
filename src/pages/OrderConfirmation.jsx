@@ -95,15 +95,11 @@ const OrderConfirmation = () => {
                                                                 {item.cut}
                                                             </span>
                                                             <span className="text-sm font-black text-[#FC8019]">
-                                                                {item.quantity} × {weightPerUnit}kg
-                                                            </span>
-                                                            <span className="text-gray-300">•</span>
-                                                            <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                                                                {totalKg.toFixed(2)} KG TOTAL
+                                                                {totalKg.toFixed(2)}kg × ₹{unitPrice}
                                                             </span>
                                                         </div>
                                                         <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tight">
-                                                            Bill Calculation: {item.quantity} {item.quantity > 1 ? 'Units' : 'Unit'} @ ₹{unitPrice}/kg
+                                                            {item.quantity} {item.quantity > 1 ? 'Units' : 'Unit'} of {weightPerUnit}kg each
                                                         </p>
                                                     </div>
                                                 </div>
