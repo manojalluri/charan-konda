@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Package, Home, Calendar, MapPin } from 'lucide-react';
+import { CheckCircle, Package, Home, Calendar, MapPin, Share2 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
 
@@ -36,6 +36,26 @@ const OrderConfirmation = () => {
     }
 
 
+    const shareOrder = async () => {
+        const shareText = `Order Confirmed at Cutora Fresh!\n\nOrder ID: ${order.id}\nTotal Amount: ₹${order.finalAmount || order.final_amount}\n\nTrack your order here: https://charan-konda.vercel.app/track-order?id=${order.id}`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Order Confirmation - Cutora Fresh',
+                    text: shareText,
+                    url: `https://charan-konda.vercel.app/track-order?id=${order.id}`
+                });
+            } catch (error) {
+                console.error('Error sharing order:', error);
+            }
+        } else {
+            // Fallback: Copy to clipboard
+            navigator.clipboard.writeText(shareText);
+            alert('Order details copied to clipboard! You can now paste and send it via SMS or WhatsApp.');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <FadeIn className="max-w-3xl mx-auto">
@@ -51,6 +71,14 @@ const OrderConfirmation = () => {
                     <p className="text-gray-500 text-lg max-w-md mx-auto">
                         Thank you for your purchase. Your order has been placed successfully and you can track your order using the order ID.
                     </p>
+                    {/* NEW: Share Button for Option 3 */}
+                    <button
+                        onClick={shareOrder}
+                        className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-[#FC8019]/10 text-[#FC8019] font-bold rounded-xl hover:bg-[#FC8019]/20 transition-all active:scale-95 border border-[#FC8019]/20"
+                    >
+                        <Share2 size={20} />
+                        SEND TO SMS / WHATSAPP
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
