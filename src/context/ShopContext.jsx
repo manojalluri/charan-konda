@@ -66,6 +66,27 @@ export const ShopProvider = ({ children }) => {
     };
 
     const [storeSettings, setStoreSettings] = useState(defaultStoreSettings);
+    const [coupon, setCoupon] = useState(null);
+
+    const verifyCoupon = async (code, amount) => {
+        try {
+            const data = await api.post('/coupons/verify', { code, amount });
+            if (data.success) {
+                setCoupon({
+                    code: data.couponCode,
+                    discount: data.discount,
+                    id: data.couponId
+                });
+                return { success: true, discount: data.discount };
+            }
+            return { success: false, message: 'Invalid coupon' };
+        } catch (err) {
+            console.error('Coupon error:', err);
+            return { success: false, message: err.response?.data?.message || err.message };
+        }
+    };
+
+    const removeCoupon = () => setCoupon(null);
 
     const fetchAllData = async (currentUser = null) => {
         const activeUser = currentUser || user;
@@ -132,6 +153,24 @@ export const ShopProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('cutora-store-settings-v2', JSON.stringify(storeSettings));
     }, [storeSettings]);
+
+    // Re-verify coupon on cart update
+    useEffect(() => {
+        if (!coupon) return;
+        const currentTotal = cart.reduce((sum, item) => sum + (getProductPrice(item.price, item.cut) * item.quantity), 0);
+
+        api.post('/coupons/verify', { code: coupon.code, amount: currentTotal })
+            .then(data => {
+                if (data.success) {
+                    if (data.discount !== coupon.discount) {
+                        setCoupon(prev => ({ ...prev, discount: data.discount }));
+                    }
+                } else {
+                    setCoupon(null);
+                }
+            })
+            .catch(() => setCoupon(null));
+    }, [cart, storeSettings, coupon?.code]);
 
     // --- ACTIONS ---
     const fetchProducts = async (background = false) => {
@@ -231,7 +270,10 @@ export const ShopProvider = ({ children }) => {
         setCart(prev => prev.filter(item => !(item.id === productId && item.cut === cut)));
     };
 
-    const clearCart = () => setCart([]);
+    const clearCart = () => {
+        setCart([]);
+        setCoupon(null);
+    };
 
     const placeOrder = async (orderData) => {
         try {
@@ -246,6 +288,8 @@ export const ShopProvider = ({ children }) => {
                 item_total: orderData.itemTotal,
                 delivery_fee: orderData.deliveryFee || 0,
                 taxes_and_charges: orderData.taxesAndCharges || 0,
+                discount: orderData.discount || 0,
+                coupon_code: orderData.couponCode,
                 final_amount: orderData.finalAmount,
                 payment_method: orderData.paymentMethod || 'COD',
                 payment_status: orderData.paymentStatus || 'Pending'
@@ -461,7 +505,10 @@ export const ShopProvider = ({ children }) => {
             fetchUsers,
             deleteUser,
             calculateDeliveryFee,
-            calculateTax
+            calculateTax,
+            coupon,
+            verifyCoupon,
+            removeCoupon
         }}>
             {children}
         </ShopContext.Provider>

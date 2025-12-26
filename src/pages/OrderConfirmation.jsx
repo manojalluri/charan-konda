@@ -141,7 +141,7 @@ const OrderConfirmation = () => {
 
 
                             <button
-                                onClick={() => navigate('/track-order')}
+                                onClick={() => navigate('/track-order', { state: { orderId: order.id } })}
                                 className="w-full px-6 py-3 bg-[#FC8019] text-white rounded-xl hover:bg-[#E26E0F] transition-all font-bold flex items-center justify-center gap-2 mb-3 shadow-md active:scale-95"
                             >
                                 <Package size={18} />
@@ -158,9 +158,17 @@ const OrderConfirmation = () => {
                         </div>
 
                         <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
-                            <p className="text-sm text-blue-800 text-center">
-                                <strong>Note:</strong> Payment will be collected via Cash or UPI at the time of delivery.
-                            </p>
+                            <ul className="text-sm text-blue-800 space-y-2">
+                                <li>
+                                    <strong>Payment:</strong> Amount should be paid during the confirmation call.
+                                </li>
+                                <li>
+                                    <strong>Cancellation:</strong> You can cancel your order ONLY during the confirmation call.
+                                </li>
+                                <li>
+                                    <strong>No Return:</strong> Once the order is confirmed and paid, no cancellations or returns are accepted.
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>

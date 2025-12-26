@@ -14,6 +14,84 @@ const Order = require('./models/Order');
 const Setting = require('./models/Setting');
 const User = require('./models/User');
 const Contact = require('./models/Contact');
+const Coupon = require('./models/Coupon');
+
+// ... (previous imports)
+
+// --- COUPON ROUTES ---
+app.get('/api/coupons', authenticate, adminOnly, async (req, res) => {
+    try {
+        const coupons = await Coupon.find().sort({ created_at: -1 });
+        res.json(coupons);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.post('/api/coupons', authenticate, adminOnly, async (req, res) => {
+    try {
+        const { code } = req.body;
+        const exist = await Coupon.findOne({ code });
+        if (exist) return res.status(400).json({ message: 'Coupon code already exists' });
+
+        const coupon = new Coupon(req.body);
+        await coupon.save();
+        res.status(201).json(coupon);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.put('/api/coupons/:id', authenticate, adminOnly, async (req, res) => {
+    try {
+        const coupon = await Coupon.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(coupon);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.delete('/api/coupons/:id', authenticate, adminOnly, async (req, res) => {
+    try {
+        await Coupon.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Coupon deleted' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.post('/api/coupons/verify', async (req, res) => {
+    try {
+        const { code, amount } = req.body;
+        const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
+
+        if (!coupon) return res.status(404).json({ message: 'Invalid or expired coupon' });
+
+        // Check Date
+        const now = new Date();
+        if (new Date(coupon.validFrom) > now) return res.status(400).json({ message: 'Coupon not yet valid' });
+        if (coupon.validUntil && new Date(coupon.validUntil) < now) return res.status(400).json({ message: 'Coupon expired' });
+
+        // Check Usage Limit
+        if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) return res.status(400).json({ message: 'Coupon usage limit reached' });
+
+        // Check Min Order
+        if (coupon.minOrder && amount < coupon.minOrder) return res.status(400).json({ message: `Minimum order of ₹${coupon.minOrder} required` });
+
+        // Calculate Discount
+        let discount = 0;
+        if (coupon.type === 'Percentage') {
+            discount = (amount * coupon.value) / 100;
+            if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
+        } else {
+            discount = coupon.value;
+        }
+
+        res.json({ success: true, discount, couponCode: coupon.code, couponId: coupon._id });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
@@ -161,6 +239,16 @@ app.get('/api/orders', authenticate, async (req, res) => {
     }
 });
 
+app.get('/api/orders/:id', async (req, res) => {
+    try {
+        const order = await Order.findOne({ id: req.params.id }).lean();
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 app.post('/api/orders', async (req, res) => {
     try {
         const orderData = req.body;
@@ -177,6 +265,13 @@ app.post('/api/orders', async (req, res) => {
         }
         const order = new Order(orderData);
         await order.save();
+
+        if (orderData.coupon_code) {
+            await Coupon.findOneAndUpdate(
+                { code: orderData.coupon_code },
+                { $inc: { usageCount: 1 } }
+            );
+        }
         res.status(201).json(order);
     } catch (err) {
         res.status(500).json({ message: err.message });

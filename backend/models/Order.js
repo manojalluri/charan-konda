@@ -25,6 +25,8 @@ const orderSchema = new mongoose.Schema({
     item_total: Number,
     delivery_fee: Number,
     taxes_and_charges: Number,
+    discount: { type: Number, default: 0 },
+    coupon_code: String,
     final_amount: Number,
     tracking_id: String,
     courier_partner: String,

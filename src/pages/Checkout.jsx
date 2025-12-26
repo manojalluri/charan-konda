@@ -5,18 +5,12 @@ import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
 
 const Checkout = () => {
-    const { cart, placeOrder, getProductPrice, user, calculateDeliveryFee, calculateTax } = useShop();
+    const { cart, placeOrder, getProductPrice, user, calculateDeliveryFee, calculateTax, coupon } = useShop();
     const navigate = useNavigate();
 
-    // Redirect if cart is empty, but only if not placing an order
+    // Redirect if cart is empty
     useEffect(() => {
         if (cart.length === 0) {
-            // We allow the component to mount even if empty, but redirecting 
-            // usually happens if user navigates here directly.
-            // However, to prevent "flash" of empty checkout when order is placed (and cart cleared),
-            // we depend on the navigation in handleSubmit happening fast.
-            // Better practice: Don't auto-redirect here if we can avoid it, or use a slightly delayed redirect.
-            // For now, per instructions, we REMOVE aggressive redirects.
             const timer = setTimeout(() => {
                 if (cart.length === 0) navigate('/cart');
             }, 500);
@@ -30,20 +24,19 @@ const Checkout = () => {
         address: '',
         city: '',
         pincode: '',
-        paymentMethod: 'COD' // Default
+        paymentMethod: 'PayOnConfirmation'
     });
 
     // Update name when user data loads
     useEffect(() => {
         if (user?.name && !formData.name) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData(prev => ({ ...prev, name: user.name }));
         }
     }, [user, formData.name]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Calculate total with dynamic pricing
+    // Calculate totals
     const itemTotal = cart.reduce((sum, item) => {
         const itemPrice = getProductPrice(item.price, item.cut);
         return sum + (itemPrice * item.quantity);
@@ -51,13 +44,14 @@ const Checkout = () => {
 
     const deliveryFee = calculateDeliveryFee(itemTotal);
     const taxesAndCharges = calculateTax(itemTotal);
-    const finalAmount = itemTotal + deliveryFee + taxesAndCharges;
+    const baseTotal = itemTotal + deliveryFee + taxesAndCharges;
+    const discountAmount = coupon ? coupon.discount : 0;
+    const finalAmount = Math.max(0, baseTotal - discountAmount);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Robust Unique Order ID Generation
     const generateOrderId = () => {
         const timestamp = Date.now().toString(36).toUpperCase().slice(-4);
         const random = Math.random().toString(36).toUpperCase().slice(2, 6);
@@ -72,10 +66,8 @@ const Checkout = () => {
         setIsSubmitting(true);
 
         try {
-            // Generate unique order ID
             const orderId = generateOrderId();
 
-            // Prepare order data
             const orderDetails = {
                 id: orderId,
                 customer: formData,
@@ -84,32 +76,27 @@ const Checkout = () => {
                 deliveryFee,
                 taxesAndCharges,
                 finalAmount,
+                discount: discountAmount,
+                couponCode: coupon?.code,
                 date: new Date().toISOString(),
                 status: 'Confirmed',
                 userId: user?.id,
                 userEmail: user?.email || formData.email,
-                paymentMethod: 'COD',
+                paymentMethod: 'PayOnConfirmation',
                 paymentStatus: 'Pending'
             };
 
-            // For COD: Place order using Context (saves to DB/Local)
             await placeOrder(orderDetails);
-
-            // Navigate to confirmation page
             navigate(`/order-confirmation/${orderId}`);
 
         } catch (error) {
-            console.error("Order placement failed. Details:", error);
-            if (error.message) console.error("Error Message:", error.message);
-            // Alert user with specific error if available, often returned by API text
-            alert(`Failed to place order. Server said: ${error.message || 'Unknown error'}`);
+            console.error("Order placement failed:", error);
+            alert(`Failed to place order: ${error.message || 'Unknown error'}`);
             setIsSubmitting(false);
         }
     };
 
     if (cart.length === 0 && !isSubmitting) {
-        // Show empty state instead of redirecting immediately to avoid hook issues
-        // or just let the useEffect handle it.
         return (
             <div className="min-h-screen bg-[#F0F0F5] flex items-center justify-center">
                 <p className="text-gray-500">Redirecting to cart...</p>
@@ -202,6 +189,12 @@ const Checkout = () => {
                                         <span className="text-[#60646C]">Taxes & Charges</span>
                                         <span className="font-semibold text-[#1C1C1C]">₹{taxesAndCharges}</span>
                                     </div>
+                                    {coupon && (
+                                        <div className="flex justify-between text-green-600 font-bold">
+                                            <span>Coupon ({coupon.code})</span>
+                                            <span>- ₹{coupon.discount}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -212,8 +205,8 @@ const Checkout = () => {
                                 </div>
 
                                 <p className="text-sm text-[#60646C] mb-6 bg-orange-50 p-4 rounded-xl border border-orange-100 flex items-start gap-3 font-medium">
-                                    <span className="text-xl">💵</span>
-                                    <span>Payment Mode: <strong>Cash on Delivery</strong> or <strong>UPI</strong> upon delivery. <br /> Please keep exact change if possible.</span>
+                                    <span className="text-xl">📞</span>
+                                    <span>Payment Mode: <strong>Pay on Confirmation</strong>. <br /> You will pay via UPI during the confirmation call.</span>
                                 </p>
 
                                 <button

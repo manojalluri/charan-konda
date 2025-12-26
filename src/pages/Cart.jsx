@@ -1,22 +1,40 @@
 import React from 'react';
+import { Minus, Plus, Trash2, ArrowRight, ShoppingBag, Tag } from 'lucide-react'; // Added Tag
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, ArrowRight } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
 
 const Cart = () => {
-    const { cart, removeFromCart, updateQuantity, getProductPrice, calculateDeliveryFee, calculateTax } = useShop();
+    const {
+        cart,
+        updateQuantity,
+        removeFromCart,
+        getProductPrice,
+        calculateDeliveryFee,
+        calculateTax,
+        coupon,
+        verifyCoupon,
+        removeCoupon
+    } = useShop();
+
     const navigate = useNavigate();
 
-    // Calculate total using dynamic pricing based on preparation type
-    const total = cart.reduce((sum, item) => {
-        const itemPrice = getProductPrice(item.price, item.cut);
-        return sum + (itemPrice * item.quantity);
-    }, 0);
+    // Calculate totals
+    const total = cart.reduce((sum, item) => sum + (getProductPrice(item.price, item.cut) * item.quantity), 0);
 
     const deliveryFee = calculateDeliveryFee(total);
     const taxesAndCharges = calculateTax(total);
+    // Base final total without discount
     const finalTotal = total + deliveryFee + taxesAndCharges;
+
+    const handleApplyCoupon = async (code) => {
+        if (!code) return;
+        const result = await verifyCoupon(code, total);
+        if (!result.success) {
+            alert(result.message);
+        }
+    };
+
 
     if (cart.length === 0) {
         return (
@@ -104,10 +122,46 @@ const Cart = () => {
                         <div className="lg:w-96 h-fit bg-white p-8 rounded-3xl shadow-float border border-gray-100/50">
                             <h3 className="font-extrabold text-xl text-[#1C1C1C] mb-6">Bill Details</h3>
 
+                            {/* Coupon Code Section */}
+                            <div className="mb-6 pb-6 border-b border-dashed border-gray-200">
+                                <h4 className="font-bold text-sm text-[#93959F] uppercase tracking-wider mb-2">Offers & Discounts</h4>
+                                {coupon ? (
+                                    <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex justify-between items-center">
+                                        <div>
+                                            <p className="font-bold text-green-700 flex items-center gap-1">
+                                                <Tag size={14} /> {coupon.code} Applied
+                                            </p>
+                                            <p className="text-xs text-green-600">You saved ₹{coupon.discount}</p>
+                                        </div>
+                                        <button onClick={removeCoupon} className="text-red-500 hover:bg-red-50 p-1 rounded">
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Enter Coupon Code"
+                                            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500 uppercase font-bold"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleApplyCoupon(e.target.value);
+                                            }}
+                                            id="couponInput"
+                                        />
+                                        <button
+                                            onClick={() => handleApplyCoupon(document.getElementById('couponInput').value)}
+                                            className="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-gray-800"
+                                        >
+                                            Apply
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="space-y-3 text-sm text-[#60646C] font-medium mb-6 pb-6 border-b border-dashed border-gray-200">
                                 <div className="flex justify-between">
                                     <span>Item Total</span>
-                                    <span className="font-semibold text-[#1C1C1C]">₹{total}</span>
+                                    <span className="font-semibold text-[#1C1C1C]">₹{Math.round(total)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Delivery Fee</span>
@@ -117,6 +171,12 @@ const Cart = () => {
                                     <span>Taxes and Charges</span>
                                     <span className="font-semibold">₹{taxesAndCharges}</span>
                                 </div>
+                                {coupon && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span className="flex items-center gap-1"><Tag size={12} /> Coupon Discount</span>
+                                        <span className="font-bold">- ₹{coupon.discount}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Item Breakdown */}
@@ -140,7 +200,7 @@ const Cart = () => {
 
                             <div className="flex justify-between font-extrabold text-xl text-[#1C1C1C] mb-8">
                                 <span>To Pay</span>
-                                <span>₹{finalTotal}</span>
+                                <span>₹{Math.max(0, finalTotal - (coupon?.discount || 0))}</span>
                             </div>
 
                             <button

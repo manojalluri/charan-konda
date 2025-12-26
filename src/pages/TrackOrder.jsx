@@ -4,6 +4,8 @@ import { Search, Package, MapPin, Calendar, Clock, CheckCircle } from 'lucide-re
 import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
 
+import { api } from '../lib/api';
+
 const TrackOrder = () => {
     const { orders } = useShop();
     const location = useLocation();
@@ -13,36 +15,56 @@ const TrackOrder = () => {
     const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => {
-        if (location.state?.orderId && orders.length > 0) {
-            // Trigger tracking automatically
-            const foundOrder = orders.find(o => o.id === location.state.orderId);
-            if (foundOrder) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setOrder(foundOrder);
-            }
+        if (location.state?.orderId) {
+            // Helper to auto-track on mount
+            const autoTrack = async () => {
+                const id = location.state.orderId;
+                // 1. Try Local
+                const foundOrder = orders.find(o => o.id === id);
+                if (foundOrder) {
+                    setOrder(foundOrder);
+                    return;
+                }
+                // 2. Try API
+                try {
+                    const data = await api.get(`/orders/${id}`);
+                    setOrder(data);
+                } catch (err) {
+                    console.error("Auto-track failed:", err);
+                }
+            };
+            autoTrack();
         }
     }, [location.state, orders]);
 
-    const handleTrack = (e) => {
+    const handleTrack = async (e) => {
         if (e) e.preventDefault();
         setError('');
         setIsSearching(true);
+        setOrder(null);
 
-        // Simulate a small delay for better UX
-        setTimeout(() => {
-            const foundOrder = orders.find(o =>
-                o.id.toLowerCase().trim() === orderIdInput.toLowerCase().trim()
+        try {
+            const trimmedId = orderIdInput.trim();
+
+            // 1. Check Local Context first (Faster)
+            const localOrder = orders.find(o =>
+                o.id.toLowerCase() === trimmedId.toLowerCase()
             );
 
-            if (foundOrder) {
-                setOrder(foundOrder);
-                setError('');
+            if (localOrder) {
+                setOrder(localOrder);
             } else {
-                setOrder(null);
-                setError('Order not found. Please check your Order ID.');
+                // 2. Fetch from Backend
+                const data = await api.get(`/orders/${trimmedId}`);
+                setOrder(data);
             }
+        } catch (err) {
+            console.error("Tracking error:", err);
+            setOrder(null);
+            setError('Order not found. Please check your Order ID.');
+        } finally {
             setIsSearching(false);
-        }, 600);
+        }
     };
 
     const getStatusIndex = (status) => {

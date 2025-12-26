@@ -1,77 +1,93 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Tag, Percent, DollarSign, ToggleRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Edit, Trash2, Tag, Percent, DollarSign, ToggleRight, Loader } from 'lucide-react';
+import { api } from '../../lib/api';
 
 const Discounts = () => {
-    const [discounts, setDiscounts] = useState([
-        {
-            id: 1,
-            code: 'WELCOME10',
-            type: 'Percentage',
-            value: 10,
-            minOrder: 500,
-            maxDiscount: 100,
-            validFrom: '2024-01-01',
-            validUntil: '2024-12-31',
-            usageLimit: 1000,
-            usageCount: 245,
-            isActive: true,
-            description: 'Welcome discount for new customers'
-        },
-        {
-            id: 2,
-            code: 'BULK500',
-            type: 'Flat',
-            value: 500,
-            minOrder: 5000,
-            maxDiscount: null,
-            validFrom: '2024-01-01',
-            validUntil: '2024-12-31',
-            usageLimit: null,
-            usageCount: 89,
-            isActive: true,
-            description: 'Flat ₹500 off on orders above ₹5000'
-        },
-        {
-            id: 3,
-            code: 'WEEKEND15',
-            type: 'Percentage',
-            value: 15,
-            minOrder: 1000,
-            maxDiscount: 250,
-            validFrom: '2024-01-01',
-            validUntil: '2024-06-30',
-            usageLimit: 500,
-            usageCount: 167,
-            isActive: true,
-            description: 'Weekend special discount'
-        },
-        {
-            id: 4,
-            code: 'SUMMER20',
-            type: 'Percentage',
-            value: 20,
-            minOrder: 2000,
-            maxDiscount: 400,
-            validFrom: '2024-03-01',
-            validUntil: '2024-05-31',
-            usageLimit: 300,
-            usageCount: 298,
-            isActive: false,
-            description: 'Summer sale discount (Expired)'
-        }
-    ]);
-
+    const [discounts, setDiscounts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [formData, setFormData] = useState({
+        code: '',
+        type: 'Percentage',
+        value: '',
+        minOrder: '',
+        validFrom: '',
+        validUntil: '',
+        usageLimit: '',
+        description: '',
+        isActive: true
+    });
 
-    const toggleDiscountStatus = (id) => {
-        setDiscounts(discounts.map(discount =>
-            discount.id === id ? { ...discount, isActive: !discount.isActive } : discount
-        ));
+    useEffect(() => {
+        fetchDiscounts();
+    }, []);
+
+    const fetchDiscounts = async () => {
+        try {
+            const data = await api.get('/coupons');
+            setDiscounts(data);
+        } catch (err) {
+            console.error('Failed to fetch coupons:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const deleteDiscount = (id) => {
-        if (confirm('Are you sure you want to delete this discount?')) {
-            setDiscounts(discounts.filter(discount => discount.id !== id));
+    const toggleDiscountStatus = async (id, currentStatus) => {
+        try {
+            const data = await api.put(`/coupons/${id}`, { isActive: !currentStatus });
+            setDiscounts(discounts.map(d => d._id === id ? data : d));
+        } catch (err) {
+            console.error('Failed to update status:', err);
+            alert('Failed to update discount status');
+        }
+    };
+
+    const deleteDiscount = async (id) => {
+        if (!confirm('Are you sure you want to delete this discount?')) return;
+        try {
+            await api.delete(`/coupons/${id}`);
+            setDiscounts(discounts.filter(d => d._id !== id));
+        } catch (err) {
+            console.error('Failed to delete coupon:', err);
+            alert('Failed to delete coupon');
+        }
+    };
+
+    const handleInput = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                ...formData,
+                value: Number(formData.value),
+                minOrder: Number(formData.minOrder) || 0,
+                usageLimit: formData.usageLimit ? Number(formData.usageLimit) : undefined
+            };
+            const data = await api.post('/coupons', payload);
+            setDiscounts([data, ...discounts]);
+            setShowCreateForm(false);
+            setFormData({
+                code: '',
+                type: 'Percentage',
+                value: '',
+                minOrder: '',
+                validFrom: '',
+                validUntil: '',
+                usageLimit: '',
+                description: '',
+                isActive: true
+            });
+        } catch (err) {
+            console.error('Failed to create coupon:', err);
+            alert(err.response?.data?.message || 'Failed to create coupon');
         }
     };
 
@@ -79,6 +95,8 @@ const Discounts = () => {
         if (!discount.usageLimit) return 0;
         return (discount.usageCount / discount.usageLimit) * 100;
     };
+
+    if (loading) return <div className="p-10 text-center"><Loader className="animate-spin mx-auto" /> Loading discounts...</div>;
 
     return (
         <div className="p-6">
@@ -138,7 +156,9 @@ const Discounts = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-500 font-medium">Avg. Discount</p>
-                            <p className="text-2xl font-bold text-gray-900 mt-1">₹{Math.round(discounts.reduce((sum, d) => sum + (d.type === 'Flat' ? d.value : d.maxDiscount || 0), 0) / discounts.length)}</p>
+                            <p className="text-2xl font-bold text-gray-900 mt-1">
+                                {discounts.length ? '₹' + Math.round(discounts.reduce((sum, d) => sum + d.value, 0) / discounts.length) : '₹0'}
+                            </p>
                         </div>
                         <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
                             <DollarSign className="w-6 h-6 text-orange-600" />
@@ -149,8 +169,10 @@ const Discounts = () => {
 
             {/* Discounts List */}
             <div className="space-y-4">
+                {discounts.length === 0 && <p className="text-center text-gray-500 py-10">No coupons created yet.</p>}
+
                 {discounts.map((discount) => (
-                    <div key={discount.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div key={discount._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                         <div className="p-6">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
@@ -162,7 +184,7 @@ const Discounts = () => {
                                             <div className="flex items-center space-x-2">
                                                 <h3 className="text-lg font-semibold text-gray-900">{discount.code}</h3>
                                                 <button
-                                                    onClick={() => toggleDiscountStatus(discount.id)}
+                                                    onClick={() => toggleDiscountStatus(discount._id, discount.isActive)}
                                                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${discount.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                                                         }`}
                                                 >
@@ -187,7 +209,8 @@ const Discounts = () => {
                                         <div>
                                             <p className="text-xs text-gray-500 font-medium">Valid Period</p>
                                             <p className="text-sm font-semibold text-gray-900 mt-1">
-                                                {discount.validFrom} to {discount.validUntil}
+                                                {new Date(discount.validFrom).toLocaleDateString()}
+                                                {discount.validUntil ? ` to ${new Date(discount.validUntil).toLocaleDateString()}` : ' (No Expiry)'}
                                             </p>
                                         </div>
                                         <div>
@@ -197,30 +220,11 @@ const Discounts = () => {
                                             </p>
                                         </div>
                                     </div>
-
-                                    {discount.usageLimit && (
-                                        <div className="mt-4">
-                                            <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                                                <span>Usage Progress</span>
-                                                <span>{Math.round(getUsagePercentage(discount))}%</span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div
-                                                    className={`h-2 rounded-full transition-all ${getUsagePercentage(discount) > 80 ? 'bg-red-500' : 'bg-orange-500'
-                                                        }`}
-                                                    style={{ width: `${getUsagePercentage(discount)}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div className="flex items-center space-x-2 ml-4">
-                                    <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                        <Edit className="w-5 h-5" />
-                                    </button>
                                     <button
-                                        onClick={() => deleteDiscount(discount.id)}
+                                        onClick={() => deleteDiscount(discount._id)}
                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                     >
                                         <Trash2 className="w-5 h-5" />
@@ -239,30 +243,21 @@ const Discounts = () => {
                         <div className="p-6 border-b border-gray-200">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-gray-900">Create New Discount</h2>
-                                <button
-                                    onClick={() => setShowCreateForm(false)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    ✕
-                                </button>
+                                <button onClick={() => setShowCreateForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
                             </div>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Discount Code</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g., SAVE20"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                    />
+                                    <input required name="code" value={formData.code} onChange={handleInput} type="text" placeholder="e.g., SAVE20" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Discount Type</label>
-                                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
-                                        <option>Percentage</option>
-                                        <option>Flat Amount</option>
+                                    <select name="type" value={formData.type} onChange={handleInput} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                        <option value="Percentage">Percentage</option>
+                                        <option value="Flat">Flat Amount</option>
                                     </select>
                                 </div>
                             </div>
@@ -270,65 +265,47 @@ const Discounts = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Discount Value</label>
-                                    <input
-                                        type="number"
-                                        placeholder="10"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                    />
+                                    <input required name="value" value={formData.value} onChange={handleInput} type="number" placeholder="10" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Min. Order Value</label>
-                                    <input
-                                        type="number"
-                                        placeholder="500"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                    />
+                                    <input name="minOrder" value={formData.minOrder} onChange={handleInput} type="number" placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Valid From</label>
-                                    <input
-                                        type="date"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                    />
+                                    <input required name="validFrom" value={formData.validFrom} onChange={handleInput} type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Valid Until</label>
-                                    <input
-                                        type="date"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                    />
+                                    <input name="validUntil" value={formData.validUntil} onChange={handleInput} type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Usage Limit</label>
+                                    <input name="usageLimit" value={formData.usageLimit} onChange={handleInput} type="number" placeholder="Optional" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                                <textarea
-                                    rows="3"
-                                    placeholder="Brief description of the discount..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                />
+                                <textarea name="description" value={formData.description} onChange={handleInput} rows="3" placeholder="Description..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
                             </div>
 
                             <div className="flex items-center">
-                                <input type="checkbox" id="active" className="w-4 h-4 text-orange-600 rounded" />
+                                <input name="isActive" checked={formData.isActive} onChange={handleInput} type="checkbox" id="active" className="w-4 h-4 text-orange-600 rounded" />
                                 <label htmlFor="active" className="ml-2 text-sm text-gray-700">Activate immediately</label>
                             </div>
-                        </div>
 
-                        <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-                            <button
-                                onClick={() => setShowCreateForm(false)}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-                                Create Discount
-                            </button>
-                        </div>
+                            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+                                <button type="button" onClick={() => setShowCreateForm(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">Create Discount</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
