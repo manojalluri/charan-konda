@@ -20,9 +20,30 @@ class AdminErrorBoundary extends React.Component {
     }
 
     handleReset = () => {
-        this.setState({ hasError: false, error: null, errorInfo: null });
-        window.location.href = '/admin/dashboard';
+        // Force a hard reload to clear cache and get fresh assets
+        window.location.search = `?t=${Date.now()}`;
+        window.location.reload(true);
     };
+
+    componentDidUpdate(prevProps, prevState) {
+        if (!prevState.hasError && this.state.hasError) {
+            const errorStr = this.state.error?.toString() || "";
+            // If it's a chunk loading error (common in Vite deployments), auto-reload once
+            if (errorStr.includes("Failed to fetch dynamically imported module") ||
+                errorStr.includes("loading chunk") ||
+                errorStr.includes("Importing a module script failed")) {
+
+                const lastReload = localStorage.getItem('last-chunk-reload');
+                const now = Date.now();
+
+                // Only auto-reload if we haven't reloaded in the last 10 seconds (prevent loops)
+                if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+                    localStorage.setItem('last-chunk-reload', now.toString());
+                    this.handleReset();
+                }
+            }
+        }
+    }
 
     handleGoHome = () => {
         window.location.href = '/';
