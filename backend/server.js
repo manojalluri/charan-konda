@@ -51,19 +51,15 @@ app.use(cors({
 
         // In development, allow ALL localhost and 127.0.0.1 origins
         if (isDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-            console.log(`✅ CORS: Allowed (dev mode) - ${origin}`);
             return callback(null, true);
         }
 
         // Check against whitelist for production
         if (allowedOrigins.indexOf(origin) === -1) {
             const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            console.error(`❌ CORS Error: Blocked origin ${origin}`);
-            console.log('✅ Allowed origins:', allowedOrigins);
             return callback(new Error(msg), false);
         }
 
-        console.log(`✅ CORS: Allowed (whitelist) - ${origin}`);
         return callback(null, true);
     },
     credentials: true,
