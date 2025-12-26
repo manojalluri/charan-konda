@@ -88,11 +88,11 @@ export const ShopProvider = ({ children }) => {
 
     const removeCoupon = () => setCoupon(null);
 
-    const fetchAllData = async (currentUser = null) => {
+    const fetchAllData = async (currentUser = null, hasCache = false) => {
         const activeUser = currentUser || user;
 
         await Promise.all([
-            fetchProducts(),
+            fetchProducts(hasCache),
             fetchSettings()
         ]);
 
@@ -139,7 +139,7 @@ export const ShopProvider = ({ children }) => {
             setIsLoadingAuth(false);
 
             // Fetch fresh heavy data in background
-            fetchAllData(initialUser);
+            fetchAllData(initialUser, !!cachedProducts);
         };
         init();
         // eslint-disable-next-line react-hooks/exhaustive-deps
