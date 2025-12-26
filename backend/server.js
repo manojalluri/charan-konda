@@ -15,6 +15,34 @@ const Setting = require('./models/Setting');
 const User = require('./models/User');
 const Contact = require('./models/Contact');
 const Coupon = require('./models/Coupon');
+const axios = require('axios');
+
+// --- HELPERS ---
+const sendSMS = async (phone, message) => {
+    const apiKey = process.env.FAST2SMS_API_KEY;
+    if (!apiKey || apiKey === 'your_api_key_here') {
+        console.warn('⚠️ SMS NOT SENT: FAST2SMS_API_KEY is missing in .env');
+        return;
+    }
+
+    // Clean phone number (remove +91 or spaces)
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+
+    try {
+        const response = await axios.get('https://www.fast2sms.com/dev/bulkV2', {
+            params: {
+                authorization: apiKey,
+                message: message,
+                language: 'english',
+                route: 'q',
+                numbers: cleanPhone,
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('❌ SMS Gateway Error:', error.response?.data || error.message);
+    }
+};
 
 // --- SERVER INIT ---
 const app = express();
@@ -400,6 +428,13 @@ app.post('/api/orders', async (req, res) => {
                 { $inc: { usageCount: 1 } }
             );
         }
+
+        // --- SEND ORDER SMS ---
+        if (order.customer && order.customer.phone) {
+            const smsMessage = `Hi ${order.customer.name}, your order ${order.id} is confirmed! Track your fresh catch here: https://charan-konda.vercel.app/track-order?id=${order.id} - Cutora Fresh`;
+            sendSMS(order.customer.phone, smsMessage);
+        }
+
         res.status(201).json(order);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -408,8 +443,28 @@ app.post('/api/orders', async (req, res) => {
 
 app.put('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
     try {
+        const oldOrder = await Order.findOne({ id: req.params.id });
         const order = await Order.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
         if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        // --- SEND UPDATE SMS ---
+        if (order.customer && order.customer.phone) {
+            let message = '';
+
+            // Case 1: Tracking ID added or changed
+            if (req.body.tracking_id && req.body.tracking_id !== oldOrder.tracking_id) {
+                message = `Hi ${order.customer.name}, your order ${order.id} has been dispatched! Courier: ${order.courier_partner || 'Surface'}. Tracking ID: ${order.tracking_id}. Track: https://charan-konda.vercel.app/track-order?id=${order.id}`;
+            }
+            // Case 2: Status changed
+            else if (req.body.status && req.body.status !== oldOrder.status) {
+                message = `Hi ${order.customer.name}, your order ${order.id} status is now: ${order.status}. Track: https://charan-konda.vercel.app/track-order?id=${order.id}`;
+            }
+
+            if (message) {
+                sendSMS(order.customer.phone, message);
+            }
+        }
+
         res.json(order);
     } catch (err) {
         res.status(500).json({ message: err.message });

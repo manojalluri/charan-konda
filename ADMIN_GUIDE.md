@@ -66,7 +66,7 @@ Once you have logged in with the initial admin account:
 | **User** | Can buy products, view their own orders |
 | **Admin** | Can manage products, orders, customers, coupons |
 | **Owner** | All Admin access + Site Settings & Financial Data |
-
+![alt text](image.png)
 ---
 
 ## ⚠️ Security Warning
