@@ -11,6 +11,8 @@ const orderSchema = new mongoose.Schema({
         name: String,
         price: Number,
         quantity: Number,
+        quantityInKg: Number,
+        category: String,
         cut: String,
         image: String
     }],

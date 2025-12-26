@@ -78,11 +78,11 @@ const OrderConfirmation = () => {
                                                     </span>
                                                     <span className="text-gray-300">•</span>
                                                     <span className="text-sm font-medium text-gray-600">
-                                                        {(item.quantityInKg * item.quantity).toFixed(2)} Kg Total
+                                                        {((item.quantityInKg || 1) * item.quantity).toFixed(2)} Kg Total
                                                     </span>
                                                 </div>
                                                 <p className="text-[10px] text-gray-400 font-medium">
-                                                    ({item.quantity} unit{item.quantity > 1 ? 's' : ''} of {item.quantityInKg}kg)
+                                                    ({item.quantity} unit{item.quantity > 1 ? 's' : ''} of {item.quantityInKg || 1}kg)
                                                 </p>
                                             </div>
                                         </div>

@@ -497,7 +497,7 @@ export const ShopProvider = ({ children }) => {
 
     // Helper function to calculate tax
     const calculateTax = (itemTotal) => {
-        const taxRate = siteConfig?.taxRate || 5;
+        const taxRate = siteConfig?.taxRate ?? 5;
         return Math.round((itemTotal * taxRate) / 100);
     };
 
