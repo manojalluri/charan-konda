@@ -8,6 +8,8 @@ const Checkout = () => {
     const { cart, placeOrder, getProductPrice, user, calculateDeliveryFee, calculateTax, coupon } = useShop();
     const navigate = useNavigate();
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Redirect if cart is empty (unless we are currently submitting)
     useEffect(() => {
         if (cart.length === 0 && !isSubmitting) {
@@ -35,8 +37,6 @@ const Checkout = () => {
             }, 0);
         }
     }, [user, formData.name]);
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Calculate totals - FIXED: Now properly accounts for quantityInKg
     const itemTotal = cart.reduce((sum, item) => {
