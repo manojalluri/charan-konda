@@ -27,6 +27,8 @@ const Products = () => {
     const [filterStatus, setFilterStatus] = useState('All');
 
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Form state for new product
     const [newProduct, setNewProduct] = useState({
         name: '',
@@ -196,12 +198,14 @@ const Products = () => {
             productData.images = newProduct.images;
         }
 
+        setIsSubmitting(true);
         let result;
         if (isEditing) {
             result = await updateProduct(editingProductId, productData);
         } else {
             result = await addProduct(productData);
         }
+        setIsSubmitting(false);
 
         if (result.success) {
             // Invalidate cached product list so customers see the latest data
@@ -864,9 +868,10 @@ const Products = () => {
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                                disabled={isSubmitting}
+                                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isEditing ? 'Update Product' : 'Save Product'}
+                                {isSubmitting ? 'Saving...' : (isEditing ? 'Update Product' : 'Save Product')}
                             </button>
                         </div>
                     </div>
