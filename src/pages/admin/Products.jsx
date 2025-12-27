@@ -32,6 +32,7 @@ const Products = () => {
         name: '',
         category: 'Goat',
         price: '',
+        readyToCookPrice: '',
         stock: '',
         status: 'Active',
         variants: [],
@@ -180,6 +181,7 @@ const Products = () => {
             name: newProduct.name,
             category: newProduct.category,
             price: parseFloat(newProduct.price),
+            readyToCookPrice: parseFloat(newProduct.readyToCookPrice) || 0,
             stock: parseInt(newProduct.stock) > 0,
             stock_quantity: parseInt(newProduct.stock),
             status: newProduct.status,
@@ -215,6 +217,7 @@ const Products = () => {
             name: '',
             category: 'Goat',
             price: '',
+            readyToCookPrice: '',
             stock: '',
             status: 'Active',
             variants: [],
@@ -242,6 +245,7 @@ const Products = () => {
             name: product.name,
             category: product.category,
             price: product.price,
+            readyToCookPrice: product.readyToCookPrice || '',
             stock: product.stock_quantity || (product.stock ? 50 : 0),
             status: product.status || 'Active',
             variants: product.variants || [],
@@ -547,6 +551,23 @@ const Products = () => {
                                             required
                                         />
                                     </div>
+                                </div>
+
+                                {/* Ready to Cook Price */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Ready to Cook Price (₹/kg)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={newProduct.readyToCookPrice}
+                                        onChange={(e) => setNewProduct({ ...newProduct, readyToCookPrice: e.target.value })}
+                                        placeholder="e.g., 680"
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Leave blank to use base price for Ready to Cook option</p>
                                 </div>
 
                                 {/* Status */}

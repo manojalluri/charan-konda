@@ -16,7 +16,7 @@ const ProductDetails = () => {
     );
 
     // Provide default cuts if not present
-    const productCuts = product?.cuts || ["Uncut", "Cut & Cleaned"];
+    const productCuts = product?.cuts || ["Uncut", "Ready to Cook"];
     const [selectedCut, setSelectedCut] = useState(product ? productCuts[0] : '');
     const [quantityType, setQuantityType] = useState('1kg'); // '250g', '500g', '1kg', 'custom'
     const [customWeight, setCustomWeight] = useState(250);
@@ -100,35 +100,37 @@ const ProductDetails = () => {
     };
 
     // Calculate price based on selected preparation type
-    const currentPrice = getProductPrice(product.price, selectedCut);
+    const currentPrice = getProductPrice(product.price, selectedCut, product.readyToCookPrice);
     const itemTotal = currentPrice * weightInKg * quantity;
 
-    // Calculate breakdown for Cut & Clean
+    // Calculate breakdown for Ready to Cook
     const getPriceBreakdown = (preparationType) => {
         const basePrice = product.price;
+        const readyToCookPrice = product.readyToCookPrice || basePrice;
+
         if (preparationType === 'Uncut') {
             return {
                 total: basePrice,
                 breakdown: null
             };
         }
-        // Cut & Clean
-        let breakdown = [];
-        let total = basePrice;
 
-        breakdown.push({ label: 'Base Price', amount: basePrice });
-
-        if (storeSettings.cuttingEnabled && storeSettings.cuttingCharge > 0) {
-            breakdown.push({ label: 'Cutting Charge', amount: storeSettings.cuttingCharge });
-            total += storeSettings.cuttingCharge;
+        // Ready to Cook
+        if (readyToCookPrice === basePrice) {
+            // No additional charge
+            return {
+                total: basePrice,
+                breakdown: null
+            };
         }
 
-        if (storeSettings.cleaningEnabled && storeSettings.cleaningCharge > 0) {
-            breakdown.push({ label: 'Cleaning Charge', amount: storeSettings.cleaningCharge });
-            total += storeSettings.cleaningCharge;
-        }
+        // Show breakdown if there's a difference
+        const breakdown = [
+            { label: 'Base Price', amount: basePrice },
+            { label: 'Ready to Cook Charge', amount: readyToCookPrice - basePrice }
+        ];
 
-        return { total, breakdown };
+        return { total: readyToCookPrice, breakdown };
     };
 
     const priceInfo = getPriceBreakdown(selectedCut);
@@ -178,7 +180,7 @@ const ProductDetails = () => {
                             <label className="text-xs font-extrabold text-[#93959F] uppercase tracking-widest">PREPARATION TYPE</label>
                             <div className="grid grid-cols-2 gap-4">
                                 {productCuts.map(cut => {
-                                    const cutPrice = getProductPrice(product.price, cut);
+                                    const cutPrice = getProductPrice(product.price, cut, product.readyToCookPrice);
                                     const isSelected = selectedCut === cut;
 
                                     return (
@@ -349,9 +351,9 @@ const ProductDetails = () => {
                                 <div className="text-sm text-[#60646C] mb-1">Price per unit ({weightInKg}kg)</div>
                                 <span className="text-4xl font-extrabold text-[#1C1C1C]">₹{Math.round(currentPrice * weightInKg)}</span>
                             </div>
-                            {selectedCut === 'Cut & Clean' && (
+                            {selectedCut === 'Ready to Cook' && (
                                 <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                    Includes cutting & cleaning
+                                    Ready to cook
                                 </span>
                             )}
                         </div>
@@ -393,7 +395,7 @@ const ProductDetails = () => {
                                 <span className="text-2xl font-extrabold text-[#FC8019]">₹{Math.round(itemTotal)}</span>
                             </div>
                             <div className="text-xs text-[#60646C] mt-1">
-                                {selectedCut === 'Uncut' ? 'Base price' : 'With cutting & cleaning charges'}
+                                {selectedCut === 'Uncut' ? 'Base price' : 'Ready to cook price'}
                             </div>
                         </div>
 

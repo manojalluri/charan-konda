@@ -488,12 +488,15 @@ export const ShopProvider = ({ children }) => {
         clearCart();
     };
 
-    const getProductPrice = (basePrice, preparationType) => {
+    const getProductPrice = (basePrice, preparationType, readyToCookPrice = null) => {
         if (preparationType === 'Uncut') return basePrice;
-        let totalCharge = basePrice;
-        if (storeSettings.cuttingEnabled) totalCharge += storeSettings.cuttingCharge;
-        if (storeSettings.cleaningEnabled) totalCharge += storeSettings.cleaningCharge;
-        return totalCharge;
+
+        // If readyToCookPrice is provided, use it; otherwise fall back to basePrice
+        if (readyToCookPrice && readyToCookPrice > 0) {
+            return readyToCookPrice;
+        }
+
+        return basePrice;
     };
 
     // Helper function to calculate delivery fee
