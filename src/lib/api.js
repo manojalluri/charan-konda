@@ -4,7 +4,6 @@ const getBaseUrl = () => {
 };
 
 const BASE_URL = getBaseUrl();
-console.log('📡 API BASE_URL:', BASE_URL);
 // API endpoint configured from environment variables
 
 const getHeaders = () => {
@@ -22,8 +21,6 @@ const getHeaders = () => {
     // Only add Authorization if token exists and is valid
     if (token && token !== 'null' && token !== 'undefined' && token.length > 10) {
         headers['Authorization'] = `Bearer ${token}`;
-    } else {
-        console.warn('⚠️ No valid auth token found in localStorage for API request');
     }
 
     return headers;

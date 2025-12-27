@@ -309,7 +309,6 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     try {
         let { phone, email, password } = req.body;
-        console.log(`🔐 Login attempt for: ${email || phone}`);
 
         // Sanitize inputs
         phone = sanitizeInput(phone);
@@ -317,21 +316,17 @@ app.post('/api/auth/login', async (req, res) => {
 
         let user = phone ? await User.findOne({ phone }) : await User.findOne({ email });
         if (!user) {
-            console.warn(`⚠️ Login failed: User not found (${email || phone})`);
             return res.status(400).json({ message: 'User not found' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            console.warn(`⚠️ Login failed: Invalid password for ${user.email}`);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        console.log(`✅ Login successful: ${user.name} (${user.role})`);
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.json({ token, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role } });
     } catch (err) {
-        console.error('❌ Login Error:', err);
         res.status(500).json({ message: err.message });
     }
 });

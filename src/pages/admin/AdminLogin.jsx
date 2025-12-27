@@ -27,10 +27,7 @@ const AdminLogin = () => {
         try {
             // Attempt login with Supabase (or bypass via ShopContext)
             const result = await loginUser(email, password);
-            console.log('Login attempt for:', email, 'Result:', result);
-
             if (!result.success) {
-                console.error('Login failed:', result.message);
                 setError(result.message || 'Invalid email or password');
                 setLoading(false);
                 return;
@@ -46,7 +43,6 @@ const AdminLogin = () => {
             }, 1000);
 
         } catch (err) {
-            console.error('CRITICAL Login error:', err);
             setError(`Login failed: ${err.message || 'An unexpected error occurred'}`);
             setLoading(false);
         }
