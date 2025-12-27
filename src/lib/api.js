@@ -1,15 +1,6 @@
 const getBaseUrl = () => {
-    let url = import.meta.env.VITE_API_BASE_URL;
-
-    // If URL is missing, fail gracefully without exposing production URL
-    if (!url) {
-        console.warn('⚠️ VITE_API_BASE_URL is not configured, falling back to /api');
-        url = '/api';
-    }
-
-    // Ensure URL doesn't have double slashes if it ends with /
-    if (url.endsWith('/')) url = url.slice(0, -1);
-    return url;
+    // Direct backend URL to avoid Vercel proxy issues with Authorization headers
+    return "https://charan-konda.onrender.com/api";
 };
 
 const BASE_URL = getBaseUrl();
@@ -31,6 +22,8 @@ const getHeaders = () => {
     // Only add Authorization if token exists and is valid
     if (token && token !== 'null' && token !== 'undefined' && token.length > 10) {
         headers['Authorization'] = `Bearer ${token}`;
+    } else {
+        console.warn('⚠️ No valid auth token found in localStorage for API request');
     }
 
     return headers;
