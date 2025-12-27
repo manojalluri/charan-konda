@@ -195,7 +195,7 @@ const OrderDetailsModal = ({ order, onClose, getProductPrice }) => (
                     <h3 className="font-bold text-sm text-[#1C1C1C] mb-3">Order Items</h3>
                     <div className="space-y-3">
                         {order.items.map((item, index) => {
-                            const itemPrice = getProductPrice(item.price, item.cut);
+                            const itemPrice = getProductPrice(item.price, item.cut, item.readyToCookPrice);
                             return (
                                 <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
                                     <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />

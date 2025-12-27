@@ -77,7 +77,7 @@ app.use(cors({
 }));
 
 app.use(compression());
-app.use(express.json({ limit: '10mb' })); // Reduced from 50mb for security
+app.use(express.json({ limit: '50mb' })); // Set to 50mb to support base64 images
 
 // Security Headers
 app.use((req, res, next) => {
@@ -331,7 +331,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/products', async (req, res) => {
     try {
         const products = await Product.find()
-            .select('name price category image stock stock_quantity status rating description cuts variants quantityConfig')
+            .select('name price category image stock stock_quantity status rating description cuts variants quantityConfig readyToCookPrice')
             .sort({ name: 1 })
             .lean();
         res.json(products);

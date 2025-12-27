@@ -22,7 +22,7 @@ const Cart = () => {
 
     // Calculate totals
     const total = cart.reduce((sum, item) => {
-        const pricePerKg = getProductPrice(item.price, item.cut);
+        const pricePerKg = getProductPrice(item.price, item.cut, item.readyToCookPrice);
         const quantityInKg = item.quantityInKg || 1;
         return sum + (pricePerKg * quantityInKg * item.quantity);
     }, 0);
@@ -66,7 +66,7 @@ const Cart = () => {
                         {/* Cart Items */}
                         <div className="flex-1 space-y-4">
                             {cart.map((item) => {
-                                const itemPrice = getProductPrice(item.price, item.cut);
+                                const itemPrice = getProductPrice(item.price, item.cut, item.readyToCookPrice);
                                 const quantityInKg = item.quantityInKg || 1;
                                 const itemSubtotal = itemPrice * quantityInKg * item.quantity;
 

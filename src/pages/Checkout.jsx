@@ -40,7 +40,7 @@ const Checkout = () => {
 
     // Calculate totals - FIXED: Now properly accounts for quantityInKg
     const itemTotal = cart.reduce((sum, item) => {
-        const pricePerKg = getProductPrice(item.price, item.cut);
+        const pricePerKg = getProductPrice(item.price, item.cut, item.readyToCookPrice);
         const quantityInKg = item.quantityInKg || 1;
         return sum + (pricePerKg * quantityInKg * item.quantity);
     }, 0);
@@ -183,7 +183,7 @@ const Checkout = () => {
                                 {/* Itemized List */}
                                 <div className="space-y-4 mb-6">
                                     {cart.map((item, idx) => {
-                                        const pricePerKg = getProductPrice(item.price, item.cut);
+                                        const pricePerKg = getProductPrice(item.price, item.cut, item.readyToCookPrice);
                                         const totalWeight = (item.quantityInKg || 1) * item.quantity;
                                         return (
                                             <div key={idx} className="flex justify-between items-start">

@@ -204,11 +204,13 @@ const Products = () => {
         }
 
         if (result.success) {
+            // Invalidate cached product list so customers see the latest data
+            localStorage.removeItem('cutora-products-v2');
             resetForm();
             setShowProductForm(false);
             alert(isEditing ? 'Product updated successfully!' : 'Product added successfully!');
         } else {
-            alert('Failed to save product');
+            alert(result.message || 'Failed to save product');
         }
     };
 

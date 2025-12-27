@@ -108,7 +108,7 @@ const OrderConfirmation = () => {
                                     return Object.values(mergedItems).map((item, index) => {
                                         const weightPerUnit = item.quantityInKg || 1;
                                         const totalKg = weightPerUnit * item.quantity;
-                                        const unitPrice = getProductPrice(item.price, item.cut);
+                                        const unitPrice = getProductPrice(item.price, item.cut, item.readyToCookPrice);
                                         const lineTotal = Math.round(unitPrice * totalKg);
 
                                         return (

@@ -181,7 +181,7 @@ export const ShopProvider = ({ children }) => {
     // Re-verify coupon on cart update
     useEffect(() => {
         if (!coupon) return;
-        const currentTotal = cart.reduce((sum, item) => sum + (getProductPrice(item.price, item.cut) * item.quantity), 0);
+        const currentTotal = cart.reduce((sum, item) => sum + (getProductPrice(item.price, item.cut, item.readyToCookPrice) * item.quantity), 0);
 
         api.post('/coupons/verify', { code: coupon.code, amount: currentTotal })
             .then(data => {
@@ -347,7 +347,7 @@ export const ShopProvider = ({ children }) => {
             return { success: true, product: normalized };
         } catch (err) {
             console.error('Error adding product:', err);
-            return { success: false };
+            return { success: false, message: err.message };
         }
     };
 
@@ -359,7 +359,7 @@ export const ShopProvider = ({ children }) => {
             return { success: true, product: normalized };
         } catch (err) {
             console.error('Error updating product:', err);
-            return { success: false };
+            return { success: false, message: err.message };
         }
     };
 
