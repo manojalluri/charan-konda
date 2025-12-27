@@ -178,7 +178,7 @@ All modules are now fully synchronized between admin and user applications:
 - Cart persistence in localStorage
 - Responsive design for mobile/tablet/desktop
 - Product filtering by category
-- Preparation type selection (Uncut, Cut & Clean)
+- Preparation type selection (Uncut, Ready to Cook)
 
 ## 🚨 Troubleshooting
 

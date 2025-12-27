@@ -23,7 +23,7 @@ const AdminDashboard = () => {
         stock: true,
         image: '/sea_fish.png',
         description: '',
-        cuts: ['Uncut', 'Cut & Cleaned']
+        cuts: ['Uncut', 'Ready to Cook']
     });
 
     // Sync config form when siteConfig changes (e.g. on load)
@@ -69,7 +69,7 @@ const AdminDashboard = () => {
             stock: true,
             image: '/sea_fish.png',
             description: '',
-            cuts: ['Uncut', 'Cut & Cleaned']
+            cuts: ['Uncut', 'Ready to Cook']
         });
     };
 

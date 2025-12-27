@@ -7,7 +7,7 @@ const ProductCard = ({ product }) => {
     const { addToCart, cart, updateQuantity, removeFromCart } = useShop();
 
     // Provide default cuts if not present in product data
-    const productCuts = product?.cuts || ["Uncut", "Cut & Cleaned"];
+    const productCuts = product?.cuts || ["Uncut", "Ready to Cook"];
     const [selectedCut, setSelectedCut] = useState(productCuts[0]);
     const [isExpanded, setIsExpanded] = useState(false);
 

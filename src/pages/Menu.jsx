@@ -56,7 +56,7 @@ const Menu = () => {
 
                 <FadeIn className="text-center mb-12">
                     <h1 className="text-4xl font-extrabold text-[#1C1C1C] mb-4 tracking-tight">Our Premium Cuts</h1>
-                    <p className="text-[#60646C] max-w-2xl mx-auto text-lg">Explore our wide range of premium meats and seafood, cut and cleaned to perfection.</p>
+                    <p className="text-[#60646C] max-w-2xl mx-auto text-lg">Explore our wide range of premium meats and seafood, ready to cook and delivered fresh.</p>
                 </FadeIn>
 
                 {/* Category Filter Pills */}
