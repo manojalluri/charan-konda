@@ -7,6 +7,7 @@ import AdminErrorBoundary from './components/admin/AdminErrorBoundary';
 import AdminLoading from './components/admin/AdminLoading';
 import OwnerProtectedRoute from './components/OwnerProtectedRoute';
 import LoadingScreen from './components/LoadingScreen';
+import PromoBanner from './components/PromoBanner';
 import { ShopProvider, useShop } from './context/ShopContext';
 
 // Lazy load pages for better performance
@@ -49,6 +50,7 @@ const Layout = ({ children }) => {
   return (
     <>
       {!isAdminRoute && <Navbar />}
+      {!isAdminRoute && <PromoBanner />}
       <main className={!isAdminRoute ? 'pt-0' : ''}>
         {children}
       </main>

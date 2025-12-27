@@ -53,6 +53,13 @@ export const ShopProvider = ({ children }) => {
         freeDeliveryAbove: 1000,
         taxRate: 5,
         minOrderValue: 200,
+        banner: {
+            enabled: false,
+            title: "Special Offer!",
+            message: "Get 20% off on your first order. Use code WELCOME20.",
+            image: "",
+            link: ""
+        }
     };
 
     const [siteConfig, setSiteConfig] = useState(defaultConfig);
@@ -62,7 +69,14 @@ export const ShopProvider = ({ children }) => {
         cleaningCharge: 10,
         cleaningEnabled: true,
         cuttingCharge: 15,
-        cuttingEnabled: true
+        cuttingEnabled: true,
+        banner: {
+            enabled: false,
+            title: "",
+            message: "",
+            image: "",
+            link: ""
+        }
     };
 
     const [storeSettings, setStoreSettings] = useState(defaultStoreSettings);
@@ -230,7 +244,9 @@ export const ShopProvider = ({ children }) => {
                     cleaningCharge: data.value.cleaningCharge ?? prev.cleaningCharge,
                     cleaningEnabled: data.value.cleaningEnabled ?? prev.cleaningEnabled,
                     cuttingCharge: data.value.cuttingCharge ?? prev.cuttingCharge,
-                    cuttingEnabled: data.value.cuttingEnabled ?? prev.cuttingEnabled
+                    cuttingCharge: data.value.cuttingCharge ?? prev.cuttingCharge,
+                    cuttingEnabled: data.value.cuttingEnabled ?? prev.cuttingEnabled,
+                    banner: data.value.banner ?? prev.banner
                 }));
             }
         } catch (err) {
@@ -435,7 +451,9 @@ export const ShopProvider = ({ children }) => {
                 cleaningCharge: savedConfig.cleaningCharge ?? prev.cleaningCharge,
                 cleaningEnabled: savedConfig.cleaningEnabled ?? prev.cleaningEnabled,
                 cuttingCharge: savedConfig.cuttingCharge ?? prev.cuttingCharge,
-                cuttingEnabled: savedConfig.cuttingEnabled ?? prev.cuttingEnabled
+                cuttingCharge: savedConfig.cuttingCharge ?? prev.cuttingCharge,
+                cuttingEnabled: savedConfig.cuttingEnabled ?? prev.cuttingEnabled,
+                banner: savedConfig.banner ?? prev.banner
             }));
 
             return { success: true };

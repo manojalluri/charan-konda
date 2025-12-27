@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Store, MapPin, Phone, Mail, DollarSign, Percent, CreditCard, Save, Users, Shield } from 'lucide-react';
+import { Store, MapPin, Phone, Mail, DollarSign, Percent, CreditCard, Save, Users, Shield, Megaphone } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
 const Settings = () => {
@@ -17,7 +17,14 @@ const Settings = () => {
         cleaningCharge: 10,
         cleaningEnabled: true,
         cuttingCharge: 15,
-        cuttingEnabled: true
+        cuttingEnabled: true,
+        banner: {
+            enabled: false,
+            title: '',
+            message: '',
+            image: '',
+            link: ''
+        }
     });
 
     useEffect(() => {
@@ -79,6 +86,7 @@ const Settings = () => {
     const tabs = [
         { id: 'store', name: 'Store Details', icon: Store },
         { id: 'payment', name: 'Payment Methods', icon: CreditCard },
+        { id: 'banner', name: 'Promotion Banner', icon: Megaphone },
         { id: 'users', name: 'Users & Roles', icon: Users }
     ];
 
@@ -260,6 +268,99 @@ const Settings = () => {
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Promotion Banner Tab */}
+                    {activeTab === 'banner' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">Popup Banner Settings</h3>
+                                <p className="text-sm text-gray-500 mb-6">Configure a popup alert that customers see when they open the website.</p>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">Show Popup Banner</p>
+                                    <p className="text-xs text-gray-500">Toggle the visibility of the promotion popup on the storefront</p>
+                                </div>
+                                <button
+                                    onClick={() => setStoreSettings({
+                                        ...storeSettings,
+                                        banner: { ...storeSettings.banner, enabled: !storeSettings.banner.enabled }
+                                    })}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${storeSettings.banner?.enabled ? 'bg-orange-600' : 'bg-gray-300'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${storeSettings.banner?.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Banner Title</label>
+                                    <input
+                                        type="text"
+                                        value={storeSettings.banner?.title || ''}
+                                        onChange={(e) => setStoreSettings({
+                                            ...storeSettings,
+                                            banner: { ...storeSettings.banner, title: e.target.value }
+                                        })}
+                                        placeholder="e.g. Christmas Sale! 🎄"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Message Content</label>
+                                    <textarea
+                                        value={storeSettings.banner?.message || ''}
+                                        onChange={(e) => setStoreSettings({
+                                            ...storeSettings,
+                                            banner: { ...storeSettings.banner, message: e.target.value }
+                                        })}
+                                        placeholder="Enter the alert message for your customers..."
+                                        rows={4}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Banner Image URL (Optional)</label>
+                                        <input
+                                            type="text"
+                                            value={storeSettings.banner?.image || ''}
+                                            onChange={(e) => setStoreSettings({
+                                                ...storeSettings,
+                                                banner: { ...storeSettings.banner, image: e.target.value }
+                                            })}
+                                            placeholder="https://example.com/image.jpg"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Action Link URL (Optional)</label>
+                                        <input
+                                            type="text"
+                                            value={storeSettings.banner?.link || ''}
+                                            onChange={(e) => setStoreSettings({
+                                                ...storeSettings,
+                                                banner: { ...storeSettings.banner, link: e.target.value }
+                                            })}
+                                            placeholder="https://example.com/sale"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end pt-4 border-t border-gray-100">
+                                <button
+                                    onClick={handleSaveStoreSettings}
+                                    className="flex items-center px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                                >
+                                    <Save className="w-5 h-5 mr-2" />
+                                    Save Banner Settings
+                                </button>
                             </div>
                         </div>
                     )}
