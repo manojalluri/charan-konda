@@ -157,6 +157,16 @@ export const ShopProvider = ({ children }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // --- AUTO-POLLING FOR LIVE UPDATES ---
+    useEffect(() => {
+        // Poll for fresh products every 30 seconds to keep customer view tailored
+        const interval = setInterval(() => {
+            fetchProducts(true); // background = true (no spinning loader)
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
     // --- PERSISTENCE (Auto-save Cache) ---
     useEffect(() => {
         localStorage.setItem('cutora-cart-v2', JSON.stringify(cart));

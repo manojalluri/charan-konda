@@ -31,7 +31,9 @@ const getHeaders = () => {
 
 export const api = {
     get: async (endpoint) => {
-        const res = await fetch(`${BASE_URL}${endpoint}`, { headers: getHeaders() });
+        // Add cache-buster to standard GET requests
+        const urlWithCache = endpoint.includes('?') ? `${endpoint}&_=${Date.now()}` : `${endpoint}?_=${Date.now()}`;
+        const res = await fetch(`${BASE_URL}${urlWithCache}`, { headers: getHeaders() });
         if (!res.ok) throw new Error(await res.text());
         return res.json();
     },
