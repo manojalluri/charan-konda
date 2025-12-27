@@ -280,20 +280,38 @@ const Settings = () => {
                                 <p className="text-sm text-gray-500 mb-6">Configure a popup alert that customers see when they open the website.</p>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">Show Popup Banner</p>
-                                    <p className="text-xs text-gray-500">Toggle the visibility of the promotion popup on the storefront</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">Show Popup Banner</p>
+                                        <p className="text-xs text-gray-500">Enable/Disable storefront popup</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setStoreSettings({
+                                            ...storeSettings,
+                                            banner: { ...storeSettings.banner, enabled: !storeSettings.banner.enabled }
+                                        })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${storeSettings.banner?.enabled ? 'bg-orange-600' : 'bg-gray-300'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${storeSettings.banner?.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setStoreSettings({
-                                        ...storeSettings,
-                                        banner: { ...storeSettings.banner, enabled: !storeSettings.banner.enabled }
-                                    })}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${storeSettings.banner?.enabled ? 'bg-orange-600' : 'bg-gray-300'}`}
-                                >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${storeSettings.banner?.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                                </button>
+
+                                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                    <label className="block text-sm font-medium text-gray-900 mb-2">Banner Mode</label>
+                                    <select
+                                        value={storeSettings.banner?.mode || 'both'}
+                                        onChange={(e) => setStoreSettings({
+                                            ...storeSettings,
+                                            banner: { ...storeSettings.banner, mode: e.target.value }
+                                        })}
+                                        className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                    >
+                                        <option value="both">Both Image & Text</option>
+                                        <option value="text">Text Only</option>
+                                        <option value="image">Image Only (Clickable)</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-6">

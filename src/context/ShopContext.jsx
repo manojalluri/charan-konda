@@ -58,7 +58,8 @@ export const ShopProvider = ({ children }) => {
             title: "Special Offer!",
             message: "Get 20% off on your first order. Use code WELCOME20.",
             image: "",
-            link: ""
+            link: "",
+            mode: "both"
         }
     };
 
