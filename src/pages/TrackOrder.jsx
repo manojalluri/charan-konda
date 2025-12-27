@@ -9,16 +9,21 @@ import { api } from '../lib/api';
 const TrackOrder = () => {
     const { orders } = useShop();
     const location = useLocation();
-    const [orderIdInput, setOrderIdInput] = useState(location.state?.orderId || '');
+    const getOrderIdFromUrl = () => {
+        const queryParams = new URLSearchParams(location.search);
+        return queryParams.get('id') || location.state?.orderId || '';
+    };
+
+    const [orderIdInput, setOrderIdInput] = useState(getOrderIdFromUrl());
     const [order, setOrder] = useState(null);
     const [error, setError] = useState('');
     const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => {
-        if (location.state?.orderId) {
+        const id = getOrderIdFromUrl();
+        if (id) {
             // Helper to auto-track on mount
             const autoTrack = async () => {
-                const id = location.state.orderId;
                 // 1. Try Local
                 const foundOrder = orders.find(o => o.id === id);
                 if (foundOrder) {
@@ -27,15 +32,19 @@ const TrackOrder = () => {
                 }
                 // 2. Try API
                 try {
+                    setIsSearching(true);
                     const data = await api.get(`/orders/${id}`);
                     setOrder(data);
                 } catch (err) {
                     console.error("Auto-track failed:", err);
+                    setError('Order not found or could not be loaded.');
+                } finally {
+                    setIsSearching(false);
                 }
             };
             autoTrack();
         }
-    }, [location.state, orders]);
+    }, [location.search, location.state, orders]);
 
     const handleTrack = async (e) => {
         if (e) e.preventDefault();

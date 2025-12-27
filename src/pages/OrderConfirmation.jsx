@@ -37,14 +37,15 @@ const OrderConfirmation = () => {
 
 
     const shareOrder = async () => {
-        const shareText = `Order Confirmed at Cutora Fresh!\n\nOrder ID: ${order.id}\nTotal Amount: ₹${order.finalAmount || order.final_amount}\n\nTrack your order here: https://charan-konda.vercel.app/track-order?id=${order.id}`;
+        const trackingUrl = `https://cutora.vercel.app/#/track-order?id=${order.id}`;
+        const shareText = `Order Confirmed at Cutora Fresh!\n\nOrder ID: ${order.id}\nTotal Amount: ₹${order.finalAmount || order.final_amount}\n\nTrack your order here: ${trackingUrl}`;
 
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: 'Order Confirmation - Cutora Fresh',
-                    text: shareText,
-                    url: `https://charan-konda.vercel.app/track-order?id=${order.id}`
+                    text: shareText
+                    // Removed 'url' to prevent duplication in some apps like WhatsApp
                 });
             } catch (error) {
                 console.error('Error sharing order:', error);

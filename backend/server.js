@@ -61,6 +61,7 @@ const allowedOrigins = [
     'http://127.0.0.1:3000',
     'http://127.0.0.1:4173',
     'https://charan-konda.vercel.app',
+    'https://cutora.vercel.app',
     // Add your production frontend URL here
 ];
 
@@ -431,7 +432,7 @@ app.post('/api/orders', async (req, res) => {
 
         // --- SEND ORDER SMS ---
         if (order.customer && order.customer.phone) {
-            const smsMessage = `Hi ${order.customer.name}, your order ${order.id} is confirmed! Track your fresh catch here: https://charan-konda.vercel.app/track-order?id=${order.id} - Cutora Fresh`;
+            const smsMessage = `Hi ${order.customer.name}, your order ${order.id} is confirmed! Track your fresh catch here: https://cutora.vercel.app/#/track-order?id=${order.id} - Cutora Fresh`;
             sendSMS(order.customer.phone, smsMessage);
         }
 
@@ -453,11 +454,11 @@ app.put('/api/orders/:id', authenticate, adminOnly, async (req, res) => {
 
             // Case 1: Tracking ID added or changed
             if (req.body.tracking_id && req.body.tracking_id !== oldOrder.tracking_id) {
-                message = `Hi ${order.customer.name}, your order ${order.id} has been dispatched! Courier: ${order.courier_partner || 'Surface'}. Tracking ID: ${order.tracking_id}. Track: https://charan-konda.vercel.app/track-order?id=${order.id}`;
+                message = `Hi ${order.customer.name}, your order ${order.id} has been dispatched! Courier: ${order.courier_partner || 'Surface'}. Tracking ID: ${order.tracking_id}. Track: https://cutora.vercel.app/#/track-order?id=${order.id}`;
             }
             // Case 2: Status changed
             else if (req.body.status && req.body.status !== oldOrder.status) {
-                message = `Hi ${order.customer.name}, your order ${order.id} status is now: ${order.status}. Track: https://charan-konda.vercel.app/track-order?id=${order.id}`;
+                message = `Hi ${order.customer.name}, your order ${order.id} status is now: ${order.status}. Track: https://cutora.vercel.app/#/track-order?id=${order.id}`;
             }
 
             if (message) {

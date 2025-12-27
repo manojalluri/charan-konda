@@ -151,7 +151,7 @@ VITE_API_BASE_URL=http://localhost:5000/api
 
 **Fix on Backend (.env):**
 ```
-ALLOWED_ORIGINS=https://charan-konda.vercel.app,https://your-custom-domain.com
+ALLOWED_ORIGINS=https://cutora.vercel.app,https://your-custom-domain.com
 ```
 
 **Or update `server.js` directly:**
@@ -164,7 +164,7 @@ const allowedOrigins = [
     'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:4173',
-    'https://charan-konda.vercel.app',
+    'https://cutora.vercel.app',
     'https://YOUR-PRODUCTION-URL.vercel.app',  // Add your URL here
 ];
 ```
