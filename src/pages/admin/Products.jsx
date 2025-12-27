@@ -104,9 +104,9 @@ const Products = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    // Max dimensions
-                    const MAX_WIDTH = 1200;
-                    const MAX_HEIGHT = 1200;
+                    // Max dimensions - Optimized for faster uploads (Render free tier)
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
 
                     let width = img.width;
                     let height = img.height;
@@ -127,8 +127,8 @@ const Products = () => {
                     canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Compress to JPEG with 0.8 quality
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    // Compress to JPEG with 0.6 quality for smaller payload
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                     resolve(dataUrl);
                 };
             };
