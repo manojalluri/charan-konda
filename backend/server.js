@@ -7,6 +7,9 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const compression = require('compression');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const xss = require('xss');
 
 // Models
 const Product = require('./models/Product');
@@ -69,60 +72,71 @@ const allowedOrigins = [
 // Check if we're in development mode
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-// Simplify CORS to allow all origins, which is necessary for a public-facing API that should be accessible from any device or network.
+app.use(helmet());
+
+// Improved Rate limiting middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+
+// Apply rate limiter to all api routes
+app.use('/api/', limiter);
+
+// Strict CORS Configuration
 app.use(cors({
-    origin: true,
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(compression());
-app.use(express.json({ limit: '50mb' })); // Set to 50mb to support base64 images
+app.use(express.json({
+    limit: '10mb',
+    // Sanitize every request body to prevent XSS
+    verify: (req, res, buf) => {
+        if (req.body && typeof req.body === 'object') {
+            const sanitize = (obj) => {
+                for (let key in obj) {
+                    if (typeof obj[key] === 'string') {
+                        obj[key] = xss(obj[key]);
+                    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        sanitize(obj[key]);
+                    }
+                }
+            };
+            // Note: express.json() hasn't parsed the body yet in verify.
+            // But we can do it in a middleware instead for better clarity.
+        }
+    }
+}));
 
-// Security Headers
+// Simple XSS Sanitization Middleware
 app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    next();
-});
-
-// Rate limiting middleware (simple implementation)
-const requestCounts = new Map();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_REQUESTS = 100; // 100 requests per minute
-
-app.use((req, res, next) => {
-    const ip = req.ip || req.connection.remoteAddress;
-    const now = Date.now();
-
-    if (!requestCounts.has(ip)) {
-        requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    } else {
-        const data = requestCounts.get(ip);
-        if (now > data.resetTime) {
-            requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-        } else {
-            data.count++;
-            if (data.count > MAX_REQUESTS) {
-                return res.status(429).json({ message: 'Too many requests. Please try again later.' });
+    if (req.body) {
+        const sanitize = (obj) => {
+            for (let key in obj) {
+                if (typeof obj[key] === 'string') {
+                    obj[key] = xss(obj[key]);
+                } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    sanitize(obj[key]);
+                }
             }
-        }
+        };
+        sanitize(req.body);
     }
     next();
 });
-
-// Clean up old rate limit entries every 5 minutes
-setInterval(() => {
-    const now = Date.now();
-    for (const [ip, data] of requestCounts.entries()) {
-        if (now > data.resetTime) {
-            requestCounts.delete(ip);
-        }
-    }
-}, 300000);
 
 // --- DEBUGGING LOGS ---
 console.log("--- SERVER STARTING ---");
