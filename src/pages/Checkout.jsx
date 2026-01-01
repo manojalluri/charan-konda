@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, User, Loader } from 'lucide-react';
+import { MapPin, User, Loader, CreditCard, Banknote } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import FadeIn from '../components/FadeIn';
+import { api } from '../lib/api';
 
 const Checkout = () => {
-    const { cart, placeOrder, getProductPrice, user, calculateDeliveryFee, calculateTax, coupon } = useShop();
+    const { cart, placeOrder, getProductPrice, user, calculateDeliveryFee, calculateTax, coupon, siteConfig } = useShop();
     const navigate = useNavigate();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,10 +24,11 @@ const Checkout = () => {
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone: '',
+        email: user?.email || '',
         address: '',
         city: '',
         pincode: '',
-        paymentMethod: 'PayOnConfirmation'
+        paymentMethod: 'Online'
     });
 
     // Update name when user data loads
@@ -37,6 +39,17 @@ const Checkout = () => {
             }, 0);
         }
     }, [user, formData.name]);
+
+    // Set default payment method based on config
+    useEffect(() => {
+        if (siteConfig) {
+            if (siteConfig.onlinePaymentEnabled && !siteConfig.codEnabled) {
+                setFormData(prev => ({ ...prev, paymentMethod: 'Online' }));
+            } else if (!siteConfig.onlinePaymentEnabled && siteConfig.codEnabled) {
+                setFormData(prev => ({ ...prev, paymentMethod: 'PayOnConfirmation' }));
+            }
+        }
+    }, [siteConfig]);
 
     // Calculate totals - FIXED: Now properly accounts for quantityInKg
     const itemTotal = cart.reduce((sum, item) => {
@@ -71,30 +84,114 @@ const Checkout = () => {
         try {
             const orderId = generateOrderId();
 
-            const orderDetails = {
-                id: orderId,
-                customer: formData,
-                items: cart,
-                itemTotal,
-                deliveryFee,
-                taxesAndCharges,
-                finalAmount,
-                discount: discountAmount,
-                couponCode: coupon?.code,
-                date: new Date().toISOString(),
-                status: 'Confirmed',
-                userId: user?.id,
-                userEmail: user?.email || formData.email,
-                paymentMethod: 'PayOnConfirmation',
-                paymentStatus: 'Pending'
-            };
+            if (formData.paymentMethod === 'Online') {
+                // 1. Create Order on Backend (Razorpay Order)
+                const rzpOrder = await api.post('/payments/create-order', {
+                    amount: finalAmount,
+                    currency: 'INR',
+                    receipt: orderId
+                });
 
-            await placeOrder(orderDetails);
-            navigate(`/order-confirmation/${orderId}`);
+                // 2. Open Razorpay Modal
+                const options = {
+                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || siteConfig.razorpay_key_id || 'rzp_test_placeholder',
+                    amount: rzpOrder.amount,
+                    currency: rzpOrder.currency,
+                    name: "Cutora Fresh",
+                    description: `Order ${orderId}`,
+                    order_id: rzpOrder.id,
+                    handler: async function (response) {
+                        // 3. Verify Payment on Backend
+                        try {
+                            const verification = await api.post('/payments/verify', {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+
+                            if (verification.success) {
+                                // 4. Place Actual Order
+                                const orderDetails = {
+                                    id: orderId,
+                                    customer: formData,
+                                    items: cart,
+                                    itemTotal,
+                                    deliveryFee,
+                                    taxesAndCharges,
+                                    finalAmount,
+                                    discount: discountAmount,
+                                    couponCode: coupon?.code,
+                                    date: new Date().toISOString(),
+                                    status: 'Confirmed',
+                                    userId: user?.id,
+                                    userEmail: user?.email || formData.email,
+                                    paymentMethod: 'Online',
+                                    paymentStatus: 'Paid',
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id
+                                };
+
+                                await placeOrder(orderDetails);
+                                navigate(`/order-confirmation/${orderId}`);
+                            } else {
+                                alert('Payment verification failed. Please contact support.');
+                                setIsSubmitting(false);
+                            }
+                        } catch (err) {
+                            console.error("Verification error:", err);
+                            alert('Payment verification failed: ' + (err.message || 'Unknown error'));
+                            setIsSubmitting(false);
+                        }
+                    },
+                    prefill: {
+                        name: formData.name,
+                        email: formData.email,
+                        contact: formData.phone
+                    },
+                    theme: {
+                        color: "#FC8019"
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setIsSubmitting(false);
+                        }
+                    }
+                };
+
+                const rzp1 = new window.Razorpay(options);
+                rzp1.on('payment.failed', function (response) {
+                    alert('Payment Failed: ' + response.error.description);
+                    setIsSubmitting(false);
+                });
+                rzp1.open();
+
+            } else {
+                // COD / Pay on Confirmation Flow
+                const orderDetails = {
+                    id: orderId,
+                    customer: formData,
+                    items: cart,
+                    itemTotal,
+                    deliveryFee,
+                    taxesAndCharges,
+                    finalAmount,
+                    discount: discountAmount,
+                    couponCode: coupon?.code,
+                    date: new Date().toISOString(),
+                    status: 'Confirmed',
+                    userId: user?.id,
+                    userEmail: user?.email || formData.email,
+                    paymentMethod: 'PayOnConfirmation',
+                    paymentStatus: 'Pending'
+                };
+
+                await placeOrder(orderDetails);
+                navigate(`/order-confirmation/${orderId}`);
+            }
 
         } catch (error) {
             console.error("Order placement failed:", error);
-            alert(`Failed to place order: ${error.message || 'Unknown error'}`);
+            alert(`Failed: ${error.message || 'Unknown error'}`);
             setIsSubmitting(false);
         }
     };
@@ -234,9 +331,63 @@ const Checkout = () => {
                                     <span className="font-extrabold text-2xl text-[#FC8019]">₹{finalAmount}</span>
                                 </div>
 
+                                {(siteConfig?.onlinePaymentEnabled !== false || siteConfig?.codEnabled !== false) && (
+                                    <div className="space-y-4 mb-6">
+                                        {(siteConfig?.onlinePaymentEnabled !== false && siteConfig?.codEnabled !== false) && (
+                                            <h4 className="font-bold text-sm text-[#93959F] uppercase tracking-wider mb-2">Select Payment Method</h4>
+                                        )}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {siteConfig?.onlinePaymentEnabled !== false && (
+                                                <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === 'Online' ? 'border-[#FC8019] bg-orange-50' : 'border-gray-100 bg-white'}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="paymentMethod"
+                                                        value="Online"
+                                                        checked={formData.paymentMethod === 'Online'}
+                                                        onChange={handleChange}
+                                                        className="hidden"
+                                                    />
+                                                    <div className={`p-2 rounded-lg ${formData.paymentMethod === 'Online' ? 'bg-[#FC8019] text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                                        <CreditCard size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-sm">Pay Online</p>
+                                                        <p className="text-[10px] text-gray-500">UPI, Cards, Net Banking</p>
+                                                    </div>
+                                                </label>
+                                            )}
+
+                                            {siteConfig?.codEnabled !== false && (
+                                                <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === 'PayOnConfirmation' ? 'border-[#FC8019] bg-orange-50' : 'border-gray-100 bg-white'}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="paymentMethod"
+                                                        value="PayOnConfirmation"
+                                                        checked={formData.paymentMethod === 'PayOnConfirmation'}
+                                                        onChange={handleChange}
+                                                        className="hidden"
+                                                    />
+                                                    <div className={`p-2 rounded-lg ${formData.paymentMethod === 'PayOnConfirmation' ? 'bg-[#FC8019] text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                                        <Banknote size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-sm">Pay on Confirmation</p>
+                                                        <p className="text-[10px] text-gray-500">Pay via UPI during confirmation call</p>
+                                                    </div>
+                                                </label>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <p className="text-sm text-[#60646C] mb-6 bg-orange-50 p-4 rounded-xl border border-orange-100 flex items-start gap-3 font-medium">
-                                    <span className="text-xl">📞</span>
-                                    <span>Payment Mode: <strong>Pay on Confirmation</strong>. <br /> You will pay via UPI during the confirmation call.</span>
+                                    <span className="text-xl">ℹ️</span>
+                                    <span>
+                                        {formData.paymentMethod === 'Online'
+                                            ? "Securely pay using Razorpay gateway. Your order will be confirmed instantly."
+                                            : "Payment Mode: Pay on Confirmation. You will have to pay via UPI once our team calls you to confirm the order."
+                                        }
+                                    </span>
                                 </p>
 
                                 <button

@@ -16,6 +16,7 @@ const User = require('./models/User');
 const Contact = require('./models/Contact');
 const Coupon = require('./models/Coupon');
 const axios = require('axios');
+const Razorpay = require('razorpay');
 
 // --- HELPERS ---
 const sendSMS = async (phone, message) => {
@@ -147,6 +148,22 @@ mongoose.connect(process.env.MONGODB_URI)
         console.error('❌ MongoDB Connection Error:', err);
         process.exit(1);
     });
+
+// --- RAZORPAY INITIALIZATION ---
+let razorpay;
+try {
+    if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+        razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+        console.log('✅ Razorpay Initialized');
+    } else {
+        console.warn('⚠️ Razorpay keys missing in .env');
+    }
+} catch (error) {
+    console.error('❌ Razorpay Initialization Error:', error);
+}
 
 // Input Sanitization Helper
 const sanitizeInput = (input) => {
@@ -559,6 +576,61 @@ app.post('/api/settings', authenticate, adminOnly, async (req, res) => {
         );
         res.json(setting);
     } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// --- PAYMENT ROUTES (Razorpay) ---
+app.post('/api/payments/create-order', async (req, res) => {
+    try {
+        if (!razorpay) {
+            return res.status(500).json({ message: 'Payment gateway not configured' });
+        }
+
+        const { amount, currency = 'INR', receipt } = req.body;
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ message: 'Invalid amount' });
+        }
+
+        const options = {
+            amount: Math.round(amount * 100), // Razorpay expects amount in paise
+            currency,
+            receipt: receipt || `receipt_${Date.now()}`,
+        };
+
+        const order = await razorpay.orders.create(options);
+        res.status(201).json(order);
+    } catch (err) {
+        console.error('❌ Razorpay Order Error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.post('/api/payments/verify', async (req, res) => {
+    try {
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+        } = req.body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ message: 'Missing payment details' });
+        }
+
+        const crypto = require('crypto');
+        const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+        hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+        const generated_signature = hmac.digest('hex');
+
+        if (generated_signature === razorpay_signature) {
+            res.json({ success: true, message: 'Payment verified' });
+        } else {
+            res.status(400).json({ success: false, message: 'Invalid payment signature' });
+        }
+    } catch (err) {
+        console.error('❌ Payment Verification Error:', err);
         res.status(500).json({ message: err.message });
     }
 });

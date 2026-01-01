@@ -60,7 +60,9 @@ export const ShopProvider = ({ children }) => {
             image: "",
             link: "",
             mode: "both"
-        }
+        },
+        onlinePaymentEnabled: true,
+        codEnabled: true
     };
 
     const [siteConfig, setSiteConfig] = useState(defaultConfig);

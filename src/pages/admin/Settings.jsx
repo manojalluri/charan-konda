@@ -24,7 +24,10 @@ const Settings = () => {
             message: '',
             image: '',
             link: ''
-        }
+        },
+        razorpay_key_id: '',
+        onlinePaymentEnabled: true,
+        codEnabled: true
     });
 
     useEffect(() => {
@@ -231,31 +234,55 @@ const Settings = () => {
                             </div>
 
                             <div className="space-y-3">
-                                {paymentMethods.map((method) => (
-                                    <div key={method.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-                                        <div className="flex items-center">
-                                            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center mr-4">
-                                                <CreditCard className="w-6 h-6 text-orange-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{method.name}</p>
-                                                <p className="text-xs text-gray-500">
-                                                    {method.enabled ? 'Currently enabled' : 'Currently disabled'}
-                                                </p>
-                                            </div>
+                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                                    <div className="flex items-center">
+                                        <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center mr-4">
+                                            <CreditCard className="w-6 h-6 text-orange-600" />
                                         </div>
-                                        <button
-                                            onClick={() => togglePaymentMethod(method.id)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${method.enabled ? 'bg-orange-600' : 'bg-gray-300'
-                                                }`}
-                                        >
-                                            <span
-                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${method.enabled ? 'translate-x-6' : 'translate-x-1'
-                                                    }`}
-                                            />
-                                        </button>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">Online Payment (Razorpay)</p>
+                                            <p className="text-xs text-gray-500">
+                                                {storeSettings.onlinePaymentEnabled ? 'Currently enabled' : 'Currently disabled'}
+                                            </p>
+                                        </div>
                                     </div>
-                                ))}
+                                    <button
+                                        onClick={() => setStoreSettings({ ...storeSettings, onlinePaymentEnabled: !storeSettings.onlinePaymentEnabled })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${storeSettings.onlinePaymentEnabled ? 'bg-orange-600' : 'bg-gray-300'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${storeSettings.onlinePaymentEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                                    <div className="flex items-center">
+                                        <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center mr-4">
+                                            <DollarSign className="w-6 h-6 text-orange-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">Pay on Confirmation (COD/UPI)</p>
+                                            <p className="text-xs text-gray-500">
+                                                {storeSettings.codEnabled ? 'Currently enabled' : 'Currently disabled'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setStoreSettings({ ...storeSettings, codEnabled: !storeSettings.codEnabled })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${storeSettings.codEnabled ? 'bg-orange-600' : 'bg-gray-300'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${storeSettings.codEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end mt-4">
+                                <button
+                                    onClick={handleSaveStoreSettings}
+                                    className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                                >
+                                    <Save className="w-4 h-4 mr-2" />
+                                    Save Payment Settings
+                                </button>
                             </div>
 
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
@@ -263,9 +290,25 @@ const Settings = () => {
                                     <Shield className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
                                     <div>
                                         <h4 className="text-sm font-semibold text-blue-900">Payment Gateway Integration</h4>
-                                        <p className="text-sm text-blue-700 mt-1">
-                                            For card payments and net banking, you need to integrate a payment gateway like Razorpay or Stripe.
-                                        </p>
+                                        <div className="mt-4 space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-blue-900 mb-2">Razorpay Key ID (Public)</label>
+                                                <input
+                                                    type="text"
+                                                    value={storeSettings.razorpay_key_id || ''}
+                                                    onChange={(e) => setStoreSettings({ ...storeSettings, razorpay_key_id: e.target.value })}
+                                                    placeholder="rzp_live_xxxxxxxxxxxxxx"
+                                                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                                />
+                                                <p className="text-xs text-blue-600 mt-1">Found in Razorpay Dashboard {'>'} Settings {'>'} API Keys</p>
+                                            </div>
+
+                                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                                <p className="text-xs text-amber-700 italic">
+                                                    <strong>Note:</strong> The "Key Secret" should only be added to the server's <code>.env</code> file for security. Never share it or add it here.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

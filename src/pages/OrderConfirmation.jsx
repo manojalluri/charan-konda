@@ -222,13 +222,18 @@ const OrderConfirmation = () => {
                         <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
                             <ul className="text-sm text-blue-800 space-y-2">
                                 <li>
-                                    <strong>Payment:</strong> Amount should be paid during the confirmation call.
+                                    <strong>Payment Method:</strong> {order.paymentMethod === 'Online' ? 'Paid Online via Razorpay' : 'Pay on Confirmation'}
                                 </li>
+                                <li>
+                                    <strong>Payment Status:</strong> {order.paymentStatus === 'Paid' ? '✅ Paid' : '⏳ Pending'}
+                                </li>
+                                {order.paymentMethod === 'PayOnConfirmation' && (
+                                    <li>
+                                        <strong>Instructions:</strong> Amount should be paid during the confirmation call.
+                                    </li>
+                                )}
                                 <li>
                                     <strong>Cancellation:</strong> You can cancel your order ONLY during the confirmation call.
-                                </li>
-                                <li>
-                                    <strong>No Return:</strong> Once the order is confirmed and paid, no cancellations or returns are accepted.
                                 </li>
                             </ul>
                         </div>
