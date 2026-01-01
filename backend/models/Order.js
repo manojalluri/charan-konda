@@ -32,6 +32,10 @@ const orderSchema = new mongoose.Schema({
     final_amount: Number,
     tracking_id: String,
     courier_partner: String,
+    payment_method: { type: String, default: 'COD' },
+    payment_status: { type: String, default: 'Pending' },
+    razorpay_order_id: String,
+    razorpay_payment_id: String,
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });

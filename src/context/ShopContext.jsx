@@ -355,7 +355,9 @@ export const ShopProvider = ({ children }) => {
                 coupon_code: orderData.couponCode,
                 final_amount: orderData.finalAmount,
                 payment_method: orderData.paymentMethod || 'COD',
-                payment_status: orderData.paymentStatus || 'Pending'
+                payment_status: orderData.paymentStatus || 'Pending',
+                razorpay_order_id: orderData.razorpay_order_id,
+                razorpay_payment_id: orderData.razorpay_payment_id
             };
             const data = await api.post('/orders', formattedOrder);
             const normalized = normalizeOrder(data);

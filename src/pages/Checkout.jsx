@@ -43,9 +43,12 @@ const Checkout = () => {
     // Set default payment method based on config
     useEffect(() => {
         if (siteConfig) {
-            if (siteConfig.onlinePaymentEnabled && !siteConfig.codEnabled) {
+            // If only Online is explicitly ON, or COD is explicitly OFF
+            if (siteConfig.onlinePaymentEnabled !== false && siteConfig.codEnabled === false) {
                 setFormData(prev => ({ ...prev, paymentMethod: 'Online' }));
-            } else if (!siteConfig.onlinePaymentEnabled && siteConfig.codEnabled) {
+            }
+            // If only COD is explicitly ON, or Online is explicitly OFF
+            else if (siteConfig.onlinePaymentEnabled === false && siteConfig.codEnabled !== false) {
                 setFormData(prev => ({ ...prev, paymentMethod: 'PayOnConfirmation' }));
             }
         }
@@ -93,6 +96,10 @@ const Checkout = () => {
                 });
 
                 // 2. Open Razorpay Modal
+                if (typeof window.Razorpay === 'undefined') {
+                    throw new Error("Razorpay payment system is not ready. Please refresh the page or check your internet connection.");
+                }
+
                 const options = {
                     key: import.meta.env.VITE_RAZORPAY_KEY_ID || siteConfig.razorpay_key_id || 'rzp_test_placeholder',
                     amount: rzpOrder.amount,
@@ -236,6 +243,15 @@ const Checkout = () => {
                                         pattern="[0-9]{10}"
                                         className="w-full p-3.5 bg-white rounded-lg border border-gray-200 focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400 font-medium"
                                     />
+                                    <input
+                                        required
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        placeholder="Email Address"
+                                        className="w-full p-3.5 bg-white rounded-lg border border-gray-200 focus:border-[#FC8019] focus:ring-1 focus:ring-[#FC8019] outline-none transition-all placeholder-gray-400 font-medium md:col-span-2"
+                                    />
                                 </div>
                             </div>
 
@@ -331,13 +347,13 @@ const Checkout = () => {
                                     <span className="font-extrabold text-2xl text-[#FC8019]">₹{finalAmount}</span>
                                 </div>
 
-                                {(siteConfig?.onlinePaymentEnabled !== false || siteConfig?.codEnabled !== false) && (
+                                {(siteConfig?.onlinePaymentEnabled !== false || siteConfig?.codEnabled !== false || !siteConfig) && (
                                     <div className="space-y-4 mb-6">
-                                        {(siteConfig?.onlinePaymentEnabled !== false && siteConfig?.codEnabled !== false) && (
+                                        {(siteConfig?.onlinePaymentEnabled !== false && siteConfig?.codEnabled !== false || !siteConfig) && (
                                             <h4 className="font-bold text-sm text-[#93959F] uppercase tracking-wider mb-2">Select Payment Method</h4>
                                         )}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {siteConfig?.onlinePaymentEnabled !== false && (
+                                            {(siteConfig?.onlinePaymentEnabled !== false || !siteConfig) && (
                                                 <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === 'Online' ? 'border-[#FC8019] bg-orange-50' : 'border-gray-100 bg-white'}`}>
                                                     <input
                                                         type="radio"
@@ -357,7 +373,7 @@ const Checkout = () => {
                                                 </label>
                                             )}
 
-                                            {siteConfig?.codEnabled !== false && (
+                                            {(siteConfig?.codEnabled !== false || !siteConfig) && (
                                                 <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === 'PayOnConfirmation' ? 'border-[#FC8019] bg-orange-50' : 'border-gray-100 bg-white'}`}>
                                                     <input
                                                         type="radio"
